@@ -97,7 +97,7 @@ export class OfficeCtl {
       onClose: () => this.pcOff(),
       board: () => { const c = h('div', { class: 'cork' }); renderNotes(c, this.board, true); return h('div', {}, c, h('div', { class: 'pc-btns' }, h('button', { class: 'pc-b on', onclick: () => this.openBoard() }, '크게 보기 · 한 줄 남기기'))); },
       bossNames: () => ({ boss: this.boss.name, mgr: this.mgr.name }),
-      lowPower: (on) => { this.g.stage.lowPower = on; },
+      lowPower: (on) => { this.g.stage.lowPower = on; document.body.classList.toggle('pc-open', on); },
     });
     this.nudgeT = between(120, 240) / FAST;
     this.world = {
@@ -336,7 +336,7 @@ export class OfficeCtl {
     const st = this.g.stage, s = this.me.seat;
     const m = this.B.monitorAt(s);
     const back = new THREE.Vector3(-Math.sin(s.ry), 0, -Math.cos(s.ry));
-    const pos = new THREE.Vector3(s.x, 1.95, s.z).addScaledVector(back, 0.75);
+    const pos = new THREE.Vector3(s.x, 2.7, s.z).addScaledVector(back, 1.7);
     st.tweenTo(() => ({ pos, tgt: m, fov: 50 }), 0.6).then(() => { if (this.mode === 'pc') { st.setFixed(pos, m, 50); this.pc.open(); this.dockKey = ''; } });
   }
   pcOff(): void {
@@ -818,6 +818,7 @@ export class OfficeCtl {
   dispose(): void {
     this.disposed = true;
     closeDialog(); this.pc.close(); this.boardClose?.(); this.closePersonBtns(); this.askEl?.remove();
+    document.body.classList.remove('pc-open');
     for (const a of [this.me, this.boss.a, this.mgr.a, ...this.staff.map((n) => n.a), ...this.peers.values()]) a.dispose();
     $ui().querySelectorAll('.pbtns').forEach((e) => e.remove());
     for (const f of this.labelOffs) f();

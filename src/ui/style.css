@@ -139,3 +139,4 @@ input, textarea { font-family: inherit; -webkit-user-select: text; user-select: 
 .ask-q { font: 800 14px P; color: #3a2f3d; }
 .ask .row { margin-top: 10px; }
 .ask .btn { height: 40px; }
+body.pc-open #gl { filter: blur(3px) brightness(.85); transition: filter .3s; }

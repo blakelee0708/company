@@ -20,7 +20,7 @@ export async function makeResultImage(d: SlipData, r: THREE.WebGLRenderer, look:
   c.fillStyle = '#fbfaf6'; rr(c, X, Y, CW, CH, 48); c.fill();
   c.textBaseline = 'alphabetic';
   c.fillStyle = '#1d2b4f'; c.font = `800 54px ${F}`; c.fillText('∞', X + 56, Y + 110);
-  c.font = `700 36px ${F}`; c.fillText('(주)무한채용 · 오늘의 급여 명세서', X + 126, Y + 104);
+  c.font = `700 31px ${F}`; c.fillText('(주)무한채용 · 오늘의 급여 명세서', X + 122, Y + 102);
   c.fillStyle = '#7a8090'; c.font = `500 30px ${F}`; c.fillText(d.date, X + 56, Y + 160);
   c.fillStyle = '#3a4152'; c.font = `600 34px ${F}`; c.fillText(fit(c, d.who, 560), X + 56, Y + 206);
   // 도장
