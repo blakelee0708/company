@@ -32,6 +32,7 @@ export interface PeerInfo { id: string; name: string; look: Look }
 
 const SEATED_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 54, up: 2.9, back: 3.3, ahead: 1.8, tgtY: 0.8 }, pc: { fov: 46, up: 4.6, back: 5.6, ahead: 2.2, tgtY: 0.6 } };
 const WALK_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 54, up: 8.2, back: 9.1, ahead: 5.2, tgtY: 0 }, pc: { fov: 46, up: 15, back: 11.6, ahead: 11.9, tgtY: 0 } };
+const PANTRY_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 50, up: 7.6, back: 7.0, ahead: 0.3, tgtY: 0.5 }, pc: { fov: 44, up: 8.5, back: 8.5, ahead: 0.3, tgtY: 0.5 } };
 const COFFEES: Array<[string, string]> = [['아메리카노', '따뜻한 아메리카노 한 잔. 잠깐 쉬어 가요'], ['믹스커피', '달달한 믹스커피 한 잔. 당 충전 완료'], ['라떼', '부드러운 라떼 한 잔. 잠깐 쉬어 가요'], ['녹차', '따뜻한 녹차 한 잔. 마음도 차분히']];
 
 export class OfficeCtl {
@@ -65,6 +66,8 @@ export class OfficeCtl {
   carry = false;
   inPantry = false;
   disposed = false;
+  private pantryFocus = new THREE.Vector3();
+  private menuOpen = false;
   private labelOffs: Array<() => void> = [];
 
   constructor(private g: Game) {
@@ -100,7 +103,7 @@ export class OfficeCtl {
     this.world = {
       scene, light: { sun: [-7, 16, 10], box: 20 },
       cam: WALK_CAM,
-      focus: () => this.me.pos,
+      focus: () => (this.inPantry && this.mode !== 'sit' && this.mode !== 'pc' ? this.pantryFocus.set(12.4, 0, THREE.MathUtils.clamp(this.me.pos.z, 1.5, 7.5)) : this.me.pos),
       occluders: this.B.occluders,
       update: (dt) => this.update(dt),
       onTap: (ray) => this.onTap(ray),
@@ -166,6 +169,9 @@ export class OfficeCtl {
     if (inP !== this.inPantry) {
       this.inPantry = inP;
       st.setBaseYaw(inP ? -Math.PI / 2 : this.mode === 'sit' || this.mode === 'pc' ? this.seatYaw() : 0);
+      if (this.mode !== 'sit' && this.mode !== 'pc') this.world.cam = inP ? PANTRY_CAM : WALK_CAM;
+      // 탕비실 안에서는 사무실 오른쪽 벽을 걷어 내고 봄
+      for (const w of this.B.rightWall) w.visible = !inP;
       this.tickHud();
     }
     // 상사 일정
@@ -270,6 +276,7 @@ export class OfficeCtl {
       if (this.inPantry && this.carry && this.pantryMates().length) key += ':cheers';
     }
     if (this.mode === 'pc') key += this.pc.isOpen ? ':on' : ':off';
+    if (this.menuOpen) { if (key.includes(':coffee') || this.mode === 'busy') return; this.menuOpen = false; }
     if (key === this.dockKey) return;
     this.dockKey = key;
     if (this.mode === 'busy') { hud.setDock(); return; }
@@ -351,9 +358,9 @@ export class OfficeCtl {
     this.occ[seat.idx] = null;
     this.refreshRings();
     this.mode = 'walk';
-    this.world.cam = WALK_CAM;
+    this.world.cam = this.inPantry ? PANTRY_CAM : WALK_CAM;
     this.g.stage.clearFixed();
-    this.g.stage.setBaseYaw(0);
+    this.g.stage.setBaseYaw(this.inPantry ? -Math.PI / 2 : 0);
     if (this.cupOnDesk) { this.cupOnDesk.parent?.remove(this.cupOnDesk); this.cupOnDesk = null; this.carry = true; this.me.w.setProp('cup'); this.me.w.anim.carry = true; }
     this.g.net?.sendState();
     this.dockKey = '';
@@ -402,7 +409,8 @@ export class OfficeCtl {
     const t = this.g.s.todos[i];
     if (!t || t.state !== 'pending') { this.visiting = null; return; }
     const isBoss = sup.role === 'boss';
-    if (isBoss && t.stamps < 1) { this.visiting = null; return; }
+    // 과장 도장이 아직이면 조금 뒤에 다시
+    if (isBoss && t.stamps < 1) { this.visiting = null; setTimeout(() => this.queue(() => this.approvalVisit(sup, i)), 5000 / FAST); return; }
     const pool = isBoss ? APPROVE_BOSS : APPROVE_MGR;
     const l = pickLine(pool, this.g.s.usedLines, { who: sup.role, hasTodo: true }) ?? pool[0];
     this.approach(sup, () => {
@@ -585,10 +593,10 @@ export class OfficeCtl {
   private coffeeMenu(): void {
     this.g.hud.setDock(h('div', { class: 'lbl' }, '커피 마시기'), rowBtns(COFFEES.slice(0, 2).map(([n, msg], i) => [n, () => void this.brew(n, msg), i === 0 ? 'on' : ''] as [string, () => void, string])), rowBtns(COFFEES.slice(2).map(([n, msg]) => [n, () => void this.brew(n, msg)] as [string, () => void])));
     this.dockKey = 'menu';
-    const here = this.me.pos.clone();
-    const chk = setInterval(() => { if (this.me.dist(here.x, here.z) > 0.8) { clearInterval(chk); this.dockKey = ''; } }, 300);
+    this.menuOpen = true;
   }
   private async brew(name: string, msg: string): Promise<void> {
+    this.menuOpen = false;
     this.mode = 'busy'; this.g.hud.setDock(); this.dockKey = '';
     const P = this.B.pantry;
     this.me.faceYaw(Math.PI / 2);

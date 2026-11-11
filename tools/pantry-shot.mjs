@@ -1,0 +1,20 @@
+// 탕비실 화면만 빠르게: node tools/pantry-shot.mjs <url> <out.png> [w] [h]
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const [url, out, w = '390', h = '844'] = process.argv.slice(2);
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const p = await b.newPage({ viewport: { width: +w, height: +h } });
+p.on('pageerror', (e) => console.log('[pageerror]', e.message));
+await p.goto(url);
+await p.waitForSelector('.sel-pill', { timeout: 90000 });
+await p.evaluate(() => window.__game.debugEnter('m'));
+await p.waitForFunction(() => window.__game.office?.mode === 'walk', null, { timeout: 120000 });
+await p.evaluate(() => { const o = window.__game.office; const P = o.B.pantry.spots.coffee; o.me.place(P.x, P.z, Math.PI / 2); o.mate = o.staff[0]; o.staff[0].a.place(P.x - 0.4, P.z + 2.0, -Math.PI / 2); o.staff[0].a.sitting = false; o.staff[0].state = 'inPantry'; o.staff[0].t = 999; o.staff[0].a.w.setPose('stand'); o.staff[0].a.w.anim.sitW = 0; o.staff[0].a.w.setProp('cup'); });
+await p.waitForTimeout(5000);
+await p.waitForFunction(() => [...document.querySelectorAll('.dock .btn')].some((x) => x.textContent.includes('커피')), null, { timeout: 60000 });
+await p.click('.dock .btn >> text=커피 마시기');
+await p.waitForTimeout(800);
+await p.screenshot({ path: out, timeout: 120000 });
+await b.close();
+console.log('saved', out);

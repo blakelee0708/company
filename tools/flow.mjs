@@ -79,7 +79,7 @@ if (UPTO >= 3) {
   await p.click('.dialog .btn >> nth=0', { timeout: 5000 }).catch(() => {});
   await p.waitForTimeout(2500);
   // 결재 도장 두 개 기다림
-  await p.waitForFunction(() => window.__game.s.todos[0].state === 'approved' || document.querySelector('.dialog'), null, { timeout: 240000 });
+  await p.waitForFunction(() => window.__game.s.todos[0].state === 'approved' || document.querySelector('.dialog'), null, { timeout: 240000 }).catch(() => console.log('approval wait timeout'));
   for (let k = 0; k < 6; k++) { if (await p.$('.dialog')) { await p.waitForTimeout(800); await p.click('.dialog .btn >> nth=0', { timeout: 5000 }).catch(() => {}); await p.waitForTimeout(2200); } const st = await p.evaluate(() => window.__game.s.todos[0].state); if (st === 'approved') break; await p.waitForTimeout(2000); }
   console.log('todo0 state', await p.evaluate(() => window.__game.s.todos[0].state), 'stamps', await p.evaluate(() => window.__game.s.todos[0].stamps));
   await p.click('.pc-mi >> text=결재함').catch(() => {});

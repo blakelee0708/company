@@ -108,7 +108,8 @@ export class Stage {
   setBaseYaw(y: number): void { this.targetBaseYaw = y; }
   resetView(): void { this.yawOff = 0; this.pitchOff = 0; this.zoom = 1; }
 
-  preset(): CamPreset | null { const c = this.world?.cam; return c ? (this.pc ? c.pc : c.phone) : null; }
+  /** 가로 화면(PC·눕힌 폰)이면 넓게 보는 카메라 */
+  preset(): CamPreset | null { const c = this.world?.cam; return c ? (this.W > this.H * 1.05 ? c.pc : c.phone) : null; }
 
   /** 따라가는 카메라 위치 계산 */
   followView(out: { pos: THREE.Vector3; tgt: THREE.Vector3; fov: number }): boolean {

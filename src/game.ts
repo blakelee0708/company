@@ -165,7 +165,7 @@ export class Game {
       cam: { phone: { fov: 64, up: 3.3, back: 9.9, ahead: 4.5, tgtY: 3.0 }, pc: { fov: 50, up: 3.6, back: 12.5, ahead: 4.5, tgtY: 3.6 } },
       focus: () => me.pos,
       update: (dt) => {
-        me.update(dt); crowd.update(dt, me); L.update(dt);
+        me.update(dt); crowd.update(dt, me, this.stage.W > this.stage.H ? 6.5 : 2.4); L.update(dt);
         L.meRing.position.set(me.pos.x, 0, me.pos.z);
         const near = Math.abs(me.pos.z - LOBBY.GZ) < 1.5 + 0.75 && me.pos.z > LOBBY.GZ && Math.abs(me.pos.x) < 5.6;
         if (!carded && !busy) { if (near && !this.cardBtn) this.showCardBtn(() => void tapCard()); else if (!near && this.cardBtn) { this.cardBtn = null; this.hud.setDock(); } }

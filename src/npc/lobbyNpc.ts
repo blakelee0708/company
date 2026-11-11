@@ -31,7 +31,7 @@ export class LobbyCrowd {
       if (n.beh === 'phone') { n.a.w.setProp('phone'); n.a.w.play('phone'); }
     }
   }
-  update(dt: number, me: Actor): void {
+  update(dt: number, me: Actor, lane = 2.4): void {
     for (const n of this.list) {
       const a = n.a;
       n.t -= dt;
@@ -47,13 +47,13 @@ export class LobbyCrowd {
       // 카메라와 나 사이(내 뒤쪽 길)는 비워 둠
       if (a.walking || n.beh === 'phone') {
         const dx = a.pos.x - me.pos.x, dz = a.pos.z - me.pos.z;
-        if (dz > -0.5 && dz < 10 && Math.abs(dx) < 2.4) { const nx = a.pos.x + Math.sign(dx || 1) * dt * 1.6; if (this.nav.free(nx, a.pos.z)) a.pos.x = nx; }
+        if (dz > -0.5 && dz < 12 && Math.abs(dx) < lane) { const nx = a.pos.x + Math.sign(dx || 1) * dt * 1.6; if (this.nav.free(nx, a.pos.z)) a.pos.x = nx; }
       }
       if (n.beh === 'wander' || n.beh === 'coffee') {
         if (!a.walking && n.t <= 0) {
           let x = between(-9.5, 9.5), z = between(-1.5, 11);
           // 내 바로 뒤(카메라 쪽)와 내 옆은 피함
-          for (let k = 0; k < 6 && (Math.abs(x - me.pos.x) < 3.5 && z > me.pos.z - 2); k++) { x = between(-9.5, 9.5); z = between(-1.5, 11); }
+          for (let k = 0; k < 8 && (Math.abs(x - me.pos.x) < lane + 1 && z > me.pos.z - 2); k++) { x = between(-9.5, 9.5); z = between(-1.5, 11); }
           if (!a.goTo(this.nav, x, z)) n.t = 1; else n.t = between(2, 6);
         }
       } else if (n.beh === 'gate') this.gate(n);
