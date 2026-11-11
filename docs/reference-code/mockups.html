@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:P;src:url(PretendardVariable.woff2) format('woff2');font-weight:100 900}
+*{box-sizing:border-box}
+body{margin:0;background:#2a2f3a;font-family:P,sans-serif;display:flex;flex-wrap:wrap;gap:24px;padding:24px;color:#14182a}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;border-radius:28px;background:#efe4d3;flex:none}
+.ph svg.scene{position:absolute;left:0;top:0}
+.hud{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.hud .l{color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.hud .l b{display:block;font-size:22px;font-weight:700}
+.hud .l span{font-size:12.5px;opacity:.95}
+.hud.dark .l{color:#1d2433;text-shadow:0 0 8px rgba(255,255,255,.9)}
+.chips{display:flex;gap:6px}
+.chip{background:rgba(20,26,40,.62);color:#fff;font-size:11.5px;border-radius:999px;padding:6px 10px;white-space:nowrap}
+.chip.w{background:#fff;color:#1b2030;box-shadow:0 2px 8px rgba(0,0,0,.15);font-weight:600}
+.dock{position:absolute;left:16px;right:16px;bottom:22px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.btn{height:54px;border-radius:16px;background:#fff;color:#141a2b;border:none;font:600 17px P;box-shadow:0 6px 18px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.on{background:#8fd3ff;color:#082531}
+.btn.dk{background:#1d2b4f;color:#fff}
+.row{display:flex;gap:8px}.row .btn{flex:1;height:48px;font-size:15px}
+.bubble{position:absolute;background:#fff;border-radius:14px;padding:8px 12px;font:700 15px P;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap}
+.bubble:after{content:'';position:absolute;left:50%;bottom:-7px;margin-left:-7px;border:7px solid transparent;border-top-color:#fff;border-bottom:0}
+.tag{position:absolute;background:rgba(255,255,255,.92);color:#1d2433;border-radius:999px;padding:3px 8px;font:600 10.5px P;white-space:nowrap;transform:translateX(-50%)}
+.toast{position:absolute;left:50%;transform:translateX(-50%);background:#1d2b4f;color:#fff;border-radius:999px;padding:9px 16px;font:600 13px P;white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.cap{position:absolute;left:0;right:0;bottom:-0px;}
+.label{position:absolute;top:-0px}
+
+.btn{border:2.5px solid #3a2f3d;box-shadow:0 4px 0 #3a2f3d;border-radius:18px;font-weight:800}
+.btn.on{background:#8fd3ff;color:#14304a}
+.btn.dk{background:#1d2b4f;color:#fff}
+.chip{background:rgba(58,47,61,.78);font-weight:700}
+.chip.w{background:#fff;color:#3a2f3d;border:2px solid #3a2f3d;box-shadow:none}
+.hud .l{color:#3a2f3d;text-shadow:0 0 6px #fff,0 0 2px #fff}
+.hud .l b{font-weight:800}
+.toast{border:2px solid #3a2f3d;font-weight:700}
+.card{background:#fff;border:2.5px solid #3a2f3d;border-radius:20px;box-shadow:0 6px 0 rgba(58,47,61,.9)}
+.ph svg.scene{position:absolute;left:0;top:0}
+
+img.scene{position:absolute;left:0;top:0;width:390px;height:844px}
+.tag3{position:absolute;transform:translate(-50%,-100%);background:#fff;border:2px solid #3a2f3d;border-radius:999px;padding:2px 9px;font:800 10.5px P;color:#3a2f3d;white-space:nowrap}
+.team3{position:absolute;transform:translate(-50%,-50%);background:#fff59a;border:2px solid #3a2f3d;border-radius:999px;padding:2px 9px;font:800 11px P;color:#3a2f3d}
+.lab3{position:absolute;transform:translate(-50%,-100%);font:800 11px P;color:#3a2f3d;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;white-space:nowrap}
+.bub3{position:absolute;transform:translate(-50%,-100%);background:#fff;border:2.4px solid #3a2f3d;border-radius:14px;padding:7px 12px;font:800 13px P;color:#3a2f3d;white-space:nowrap}
+.bub3:after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-7px;border:7px solid transparent;border-top-color:#3a2f3d;border-bottom:0}
+.bub3:before{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:#fff;border-bottom:0;z-index:1}
+.bub3.big{font-size:19px;padding:9px 16px;font-weight:900}
+
+.pc{position:relative;width:1440px;height:900px;overflow:hidden;border-radius:18px;background:#efe4d3;flex:none}
+.pc img.pcs{width:1440px;height:900px}
+.pc .hud{top:22px;left:26px;right:26px}.pc .hud .l b{font-size:26px}.pc .hud .l span{font-size:14px}
+.pdock{position:absolute;right:28px;bottom:28px;width:360px;display:flex;flex-direction:column;gap:10px}
+.key{display:inline-block;margin-left:8px;border:2px solid #3a2f3d;border-radius:6px;padding:0 6px;font:800 12px P;background:#fff;color:#3a2f3d}
+</style></head><body>
+
+<!-- 00 타이틀 -->
+<div class="ph" id="f00"><img class="scene" id="s00" width="390" height="844">
+  <div style="position:absolute;left:0;right:0;top:92px;text-align:center;color:#1d2b4f">
+    <div style="font:700 17px P;letter-spacing:6px">(주)무한채용</div>
+    <div style="font:900 56px P;letter-spacing:1px;margin-top:6px;color:#1d2b4f;-webkit-text-stroke:0;text-shadow:0 4px 0 #fff">출근하기</div>
+    <div style="font:600 13px P;margin-top:10px;color:#4a5878">누구나, 언제든 채용합니다</div>
+    <div style="margin:22px auto 0;width:170px;height:12px;border-radius:8px;background:#fff;border:2.5px solid #3a2f3d;overflow:hidden"><div style="width:68%;height:100%;background:#8fd3ff"></div></div>
+  </div>
+</div>
+
+<!-- 00b 캐릭터 선택 -->
+<div class="ph" id="f00b"><img class="scene" id="s00b" width="390" height="844">
+  <div style="position:absolute;left:0;right:0;top:64px;text-align:center"><div style="font:600 13px P;color:#5a6274">(주)무한채용 신입사원 등록</div><div style="font:900 26px P;color:#1d2b4f;margin-top:6px">누구로 출근할까요?</div></div>
+  <div style="position:absolute;left:35px;top:540px;width:140px;text-align:center"><span style="display:inline-block;background:#8fd3ff;border:2.5px solid #3a2f3d;border-radius:999px;padding:6px 18px;font:800 16px P;color:#14304a">남사원</span></div>
+  <div style="position:absolute;left:215px;top:540px;width:140px;text-align:center"><span style="display:inline-block;background:#fff;border:2.5px solid #3a2f3d;border-radius:999px;padding:6px 18px;font:800 16px P;color:#3a2f3d">여사원</span></div>
+  <div style="position:absolute;left:20px;right:20px;top:600px" class="card">
+    <div style="padding:12px 14px 14px">
+      <div style="font:700 12px P;color:#5a6274">정장 색</div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <span style="width:32px;height:32px;border-radius:50%;background:#33467a;border:2.5px solid #3a2f3d;box-shadow:0 0 0 3px #8fd3ff"></span>
+        <span style="width:32px;height:32px;border-radius:50%;background:#4a4e58;border:2.5px solid #3a2f3d"></span>
+        <span style="width:32px;height:32px;border-radius:50%;background:#8a91a0;border:2.5px solid #3a2f3d"></span>
+        <span style="width:32px;height:32px;border-radius:50%;background:#2c2e35;border:2.5px solid #3a2f3d"></span>
+        <span style="width:32px;height:32px;border-radius:50%;background:#dcc29b;border:2.5px solid #3a2f3d"></span>
+        <span style="width:32px;height:32px;border-radius:50%;background:#e9a9b4;border:2.5px solid #3a2f3d"></span>
+      </div>
+      <div style="font:600 12px P;color:#5a6274;margin-top:10px">오늘의 이름 <b style="color:#1d2b4f;font-weight:800">김사원#4821</b> · 매일 새로 정해져요</div>
+    </div>
+  </div>
+  <div class="dock"><button class="btn on">출근하기</button></div>
+</div>
+
+<!-- 01 로비 -->
+<div class="ph" id="f01"><img class="scene" id="s01" width="390" height="844">
+  <div class="hud"><div class="l"><b>1층 로비</b><span>사원증을 찍고 들어가요</span></div><div class="chips"><span class="chip">조작법</span><span class="chip">소리 끔</span></div></div>
+  <div class="dock"><button class="btn on">🪪 카드 찍기</button></div>
+</div>
+
+<!-- 01b 카드 찍음 -->
+<div class="ph" id="f01b"><img class="scene" id="s01b" width="390" height="844">
+  <div class="hud"><div class="l"><b>1층 로비</b><span>삑! 출입이 확인됐어요</span></div></div>
+  <div class="card" style="position:absolute;left:50%;top:120px;transform:translateX(-50%) rotate(-3deg);width:236px;overflow:hidden">
+    <div style="background:#1d2b4f;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:8px"><span style="font:800 20px P">∞</span><span style="font:800 14px P">(주)무한채용</span><span style="margin-left:auto;font:700 10px P;opacity:.85">사원증</span></div>
+    <div style="padding:14px 14px 16px;display:flex;gap:12px;align-items:center">
+      <div id="idface" style="width:68px;height:80px;overflow:hidden;background:#eaf5ff;border-radius:12px;border:2px solid #3a2f3d"></div>
+      <div><div style="font:700 12px P;color:#5a6274">신바람기획부 · 3층</div><div style="font:900 21px P;margin-top:3px;color:#1d2b4f">김사원</div><div style="font:600 12px P;color:#8a90a0">#4821</div><div style="font:700 10.5px P;color:#2f8f6a;margin-top:7px">● 오늘 출근 09:02</div></div>
+    </div>
+  </div>
+  <div class="toast" style="bottom:100px">신바람기획부로 배정됐어요 · 엘리베이터로 가요</div>
+</div>
+
+<!-- 02 엘리베이터 -->
+<div class="ph" id="f02"><img class="scene" id="s02" width="390" height="844">
+  <div class="hud"><div class="l"><b>엘리베이터 홀</b><span>3층 신바람기획부로</span></div></div>
+  <div class="dock"><button class="btn on">엘리베이터 타기</button></div>
+</div>
+
+<!-- 03 사무실 -->
+<div class="ph" id="f03"><img class="scene" id="s03" width="390" height="844">
+  <div class="hud"><div class="l"><b>신바람기획부 · 3층</b><span>지금 근무 중 14명 · 00:03:12</span></div><div class="chips"><span class="chip w">퇴근하기</span><span class="chip">조작법</span></div></div>
+  <div class="dock"><div class="toast" style="position:static;transform:none;align-self:center">하늘색 동그라미가 빈자리예요</div><button class="btn on">자리에 앉기</button></div>
+</div>
+
+<div class="ph" id="f03b" style="background:#f4f1ea"><img class="scene" id="s03b" width="390" height="844">
+  <div style="position:absolute;top:18px;left:18px;right:18px"><div style="font:800 21px P;text-shadow:0 0 6px #fff">부서 사무실 배치도</div><div style="font:600 12px P;color:#4a5164;margin-top:4px;text-shadow:0 0 6px #fff">부서 하나 = 방 하나 · 사원 자리 20 (1팀 7 · 2팀 7 · 3팀 6)<br>과장은 2팀 팀장 자리 · 부장은 맨 안쪽</div></div>
+  <div style="position:absolute;left:14px;right:14px;bottom:14px" class="card"><div style="padding:9px 12px;font:700 11.5px/1.7 P;color:#3a2f3d">
+    <span style="display:inline-block;width:12px;height:12px;border-radius:50%;border:3px solid #57b8ff;vertical-align:-2px"></span> 빈자리(여기 앉을 수 있어요) &nbsp; · &nbsp; 앉은 사람 = 실제 사람 또는 NPC 사원<br>칸막이 자리 하나 3m · 듀얼 모니터 · 등을 맞댄 두 줄</div></div>
+</div>
+
+<div class="ph" id="f04"><img class="scene" id="s04" width="390" height="844" style="filter:blur(3px) brightness(.8)">
+  <div style="position:absolute;left:12px;right:12px;top:70px;background:#4a5060;border:3px solid #3a2f3d;border-radius:18px;padding:10px;box-shadow:0 8px 0 rgba(58,47,61,.9)">
+    <div style="background:#f6f7fa;border-radius:8px;overflow:hidden">
+      <div style="background:#1d2b4f;color:#fff;display:flex;align-items:center;gap:8px;padding:9px 12px"><b style="font:800 15px P">∞</b><span style="font:700 12.5px P">무한채용 그룹웨어</span><span style="margin-left:auto;font:500 11px P;opacity:.85">김사원 · 10:24</span></div>
+      <div style="display:flex">
+        <div style="width:86px;background:#e9ecf3;padding:10px 0;font:600 11px P;color:#4a5164">
+          <div style="padding:8px 10px;background:#fff;color:#1d2b4f;border-left:3px solid #1d2b4f">오늘의 할 일</div>
+          <div style="padding:8px 10px">결재함 <span style="background:#d23b3b;color:#fff;border-radius:8px;padding:0 5px;font-size:9.5px">1</span></div>
+          <div style="padding:8px 10px">사내 게시판</div><div style="padding:8px 10px">오늘 기록</div>
+        </div>
+        <div style="flex:1;padding:12px 12px 14px" id="todo"></div>
+      </div>
+    </div>
+    <div style="height:14px;display:flex;justify-content:center;align-items:flex-end"><div style="width:70px;height:6px;background:#1a1d24;border-radius:3px"></div></div>
+  </div>
+  <div class="dock"><div class="row"><button class="btn">화면 끄기</button><button class="btn">일어나기</button><button class="btn dk">퇴근하기</button></div></div>
+</div>
+
+<div class="ph" id="f05"><img class="scene" id="s05" width="390" height="844">
+  <div class="hud dark"><div class="l"><b>신바람기획부 · 3층</b><span>근무 중 · 00:41:05</span></div><div class="chips"><span class="chip w">퇴근하기</span></div></div>
+  <div style="position:absolute;left:12px;right:12px;bottom:22px;background:#fff;border:2.5px solid #3a2f3d;border-radius:22px;box-shadow:0 6px 0 rgba(58,47,61,.9);padding:16px">
+    <div style="display:flex;gap:12px;align-items:center"><div id="bossface" style="width:58px;height:58px;overflow:hidden;background:#eaf5ff;border-radius:14px;border:2px solid #3a2f3d"></div>
+      <div><div style="font:800 16px P">최부장</div><div style="font:500 11.5px P;color:#7a8090">신바람기획부 부장</div></div></div>
+    <div style="font:600 17px/1.5 P;margin:12px 2px 14px">'자기소개서 1번 문항' 그거<br>오늘 안에 부탁할게. 급한 건 아니야 ㅎㅎ</div>
+    <div class="row"><button class="btn on" style="box-shadow:0 3px 0 #3a2f3d">알겠습니다</button><button class="btn" style="box-shadow:0 3px 0 #3a2f3d">오늘 꼭 할게요</button></div>
+    <div class="row" style="margin-top:8px"><button class="btn" style="box-shadow:0 3px 0 #3a2f3d">퇴근하겠습니다</button></div>
+  </div>
+</div>
+
+<!-- 06 탕비실 -->
+<div class="ph" id="f06"><img class="scene" id="s06" width="390" height="844">
+  <div class="hud"><div class="l"><b>탕비실</b><span>잠깐 쉬어 가요</span></div><div class="chips"><span class="chip w">퇴근하기</span></div></div>
+  <div class="card" style="position:absolute;left:16px;right:16px;top:74px;padding:12px 14px">
+    <div style="font:800 14px P;color:#3a2f3d">이사원님이 탕비실 같이 가자고 해요</div>
+    <div class="row" style="margin-top:10px"><button class="btn on" style="height:40px">같이 가요</button><button class="btn" style="height:40px">다음에요</button></div>
+  </div>
+  <div class="dock"><div style="font:800 13px P;color:#3a2f3d;text-align:center">커피 마시기</div>
+    <div class="row"><button class="btn on">아메리카노</button><button class="btn">믹스커피</button></div>
+    <div class="row"><button class="btn">라떼</button><button class="btn">녹차</button></div></div>
+</div>
+
+<div class="ph" id="f07" style="background:#3a3f4b">
+  <div style="position:absolute;left:14px;right:14px;top:60px;bottom:120px;background:#c89a64;border-radius:14px;border:10px solid #7a5434;box-shadow:inset 0 0 30px rgba(0,0,0,.25)" id="cork"></div>
+  <div style="position:absolute;top:18px;left:20px;color:#fff;font:800 20px P">사내 게시판 <span style="font:500 12px P;opacity:.75">건물 전체 · 최근 40개</span></div>
+  <div class="dock"><button class="btn on">✏️ 한 줄 남기기</button></div>
+</div>
+
+<div class="ph" id="f08" style="background:linear-gradient(#1b2547,#0e1428)">
+  <div style="position:absolute;left:18px;right:18px;top:38px;background:#fbfaf6;border-radius:18px;padding:20px 20px 18px;box-shadow:0 20px 50px rgba(0,0,0,.4)">
+    <div style="display:flex;align-items:center;gap:8px"><b style="font:800 20px P;color:#1d2b4f">∞</b><span style="font:700 13px P;color:#1d2b4f">(주)무한채용 · 오늘의 급여 명세서</span></div>
+    <div style="font:500 11.5px P;color:#7a8090;margin-top:2px">2026. 11. 11 (수)</div><div style="font:600 12.5px P;color:#3a4152;margin-top:2px">신바람기획부 김사원#4821</div>
+    <div style="position:absolute;right:18px;top:18px;width:74px;height:74px;border:3px solid #d23b3b;border-radius:50%;color:#d23b3b;display:flex;align-items:center;justify-content:center;text-align:center;font:800 12px/1.2 P;transform:rotate(-14deg);opacity:.9">오늘도<br>출근<br>완료</div>
+    <div style="border-top:1px dashed #cfd3dc;margin:22px 0 10px"></div>
+    <div style="display:flex;justify-content:space-between;font:600 13px P;color:#4a5164"><span>근무 시간</span><span>09:02 ~ 11:36 · 2시간 34분</span></div>
+    <div style="text-align:center;margin:14px 0 2px;font:500 12px P;color:#7a8090">오늘 번 돈</div>
+    <div style="text-align:center;font:800 46px P;color:#d2462f;letter-spacing:-1px">26,750<span style="font:700 20px P;color:#1d2433"> 원</span></div>
+    <div style="text-align:center;font:500 11px P;color:#8a90a0">시급 10,700원 기준 · 30분 단위 (5 × 5,350원)</div>
+    <div style="border-top:1px dashed #cfd3dc;margin:14px 0 10px"></div>
+    <div style="font:700 12.5px P;color:#1d2433;margin-bottom:6px">오늘 한 일</div>
+    <div id="done" style="font:500 13px/1.9 P"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <div style="flex:1;background:#eef1f6;border-radius:10px;padding:8px;text-align:center;font:500 11px P;color:#6a7080">마신 커피<b style="display:block;font:800 17px P;color:#1d2433">2잔</b></div>
+      <div style="flex:1;background:#eef1f6;border-radius:10px;padding:8px;text-align:center;font:500 11px P;color:#6a7080">같이 일한 사람<b style="display:block;font:800 17px P;color:#1d2433">16명</b></div>
+      <div style="flex:1;background:#eef1f6;border-radius:10px;padding:8px;text-align:center;font:500 11px P;color:#6a7080">받은 칭찬<b style="display:block;font:800 17px P;color:#1d2433">5번</b></div>
+    </div>
+    <div style="margin-top:14px;background:#fff3e2;border-radius:12px;padding:12px;text-align:center"><div style="font:600 10.5px P;color:#c07a2a">오늘의 한마디</div><div style="font:700 15px/1.45 P;margin-top:4px">오늘도 출근한 당신,<br>그것만으로 충분히 잘했어요</div></div>
+  </div>
+  <div class="dock"><button class="btn">결과 이미지 저장</button><button class="btn on">다시 출근하기</button></div>
+</div>
+
+
+<!-- PC(가로) 화면 -->
+<div class="pc" id="p01"><img class="scene pcs" id="q01">
+  <div class="hud"><div class="l"><b>1층 로비</b><span>사원증을 찍고 들어가요 · 클릭한 곳으로 걸어가요</span></div><div class="chips"><span class="chip">조작법</span><span class="chip">소리 끔</span></div></div>
+  <div class="pdock"><button class="btn on">🪪 카드 찍기 <span class="key">Space</span></button></div>
+</div>
+<div class="pc" id="p03"><img class="scene pcs" id="q03">
+  <div class="hud"><div class="l"><b>신바람기획부 · 3층</b><span>지금 근무 중 14명 · 00:03:12</span></div><div class="chips"><span class="chip w">퇴근하기</span><span class="chip">조작법</span><span class="chip">소리 끔</span></div></div>
+  <div class="pdock"><div class="toast" style="position:static;transform:none;align-self:center">하늘색 동그라미가 빈자리예요</div><button class="btn on">자리에 앉기 <span class="key">E</span></button></div>
+</div>
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
+<script type="module">
+import * as S from './scenes4.js';
+const $=id=>document.getElementById(id);
+await document.fonts.load('800 40px P');
+const W=390,H=844, cv=document.createElement('canvas'), R=S.renderer(cv,W,H);
+function shot(id, built, cam, overlays){
+  S.lightUp(R, built.scene, built.sun||{}); R.render(built.scene,cam); $(id).src=cv.toDataURL('image/png');
+  const ph=$(id).parentElement;
+  (overlays||[]).forEach(([key,html,cls,dx=0,dy=0])=>{const v=built.tops[key]; if(!v) {console.error('no top',key); return;} const [x,y]=S.toScreen(cam,v,W,H);
+    const d=document.createElement('div'); d.className=cls; d.innerHTML=html; d.style.left=(x+dx)+'px'; d.style.top=(y+dy)+'px'; ph.appendChild(d);});
+}
+const OCC={0:1,1:1,3:1,4:1,6:1,7:1,9:1,10:1,11:1,13:1,14:1,16:1,17:1,19:1};
+shot('s00', S.title(), S.perspCam(W,H,44,[0,3.0,19],[0,7.0,0]));
+shot('s00b', S.select(), S.perspCam(W,H,34,[0,1.9,11],[0,1.15,0]));
+const lc=S.perspCam(W,H,64,[-.6,3.3,8.4],[-.6,3.0,-6]);
+shot('s01', S.lobby(false), lc, [['me','김사원#4821','tag3',0,-6]]);
+shot('s01b', S.lobby(true), lc, [['me','김사원#4821','tag3',0,-6]]);
+shot('s02', S.elevator(), S.perspCam(W,H,42,[0,2.9,9.6],[0,1.6,-1.5]), [['beckon','빨리 타!','bub3 big',0,-8]]);
+const oc=S.perspCam(W,H,54,[.4,8.2,17.5],[.4,0,3.2]);
+shot('s03', S.office({occ:OCC, me:[.4,8.4]}), oc, [['boss','최부장 · NPC','tag3',0,-4],['mgr','박과장 · NPC','tag3',0,-4],['seat14','왔어? 좋은 아침!','bub3',0,-6],['team3팀','3팀','team3',34],['team2팀','2팀','team3',30],['team1팀','1팀','team3',24],['pantry','탕비실 →','lab3',-16]]);
+{ const T=S.THREE, w=21, h=w*H/W, mc=new T.OrthographicCamera(-w/2,w/2,h/2,-h/2,.1,200); mc.position.set(0,40,-4.6+11); mc.lookAt(0,0,-4.6); mc.updateMatrixWorld();
+  shot('s03b', S.office({occ:OCC}), mc, [['boss','부장','tag3',0,-2],['mgr','과장 (2팀 팀장)','tag3',0,-2],['team3팀','3팀','team3',-6],['team2팀','2팀','team3',-6],['team1팀','1팀','team3',-6],['board','게시판','lab3',16,10],['pantry','탕비실 →','lab3',-22,10],['door','유리문 · 엘리베이터에서 들어옴','lab3',0,-4]]); }
+shot('s04', S.office({occ:Object.assign({},OCC,{18:'me'})}), oc);
+shot('s05', S.closeup(), S.perspCam(W,H,50,[2.6,4.8,9.4],[.6,.2,2.6]));
+shot('s06', S.pantry(), S.perspCam(W,H,42,[-1.3,6.6,13.2],[-1.2,.5,-.8]), [['me','김사원','tag3',0,-4],['lee','이사원','tag3',0,-4],['cheers','짠!','bub3 big',0,-2],['coffee','커피 머신','lab3'],['water','정수기','lab3'],['snack','간식','lab3']]);
+function portrait(el,o,w,h){ const c2=document.createElement('canvas'), r2=S.renderer(c2,w,h); const sc=new S.THREE.Scene(); sc.background=new S.THREE.Color(0xeaf5ff);
+  const p=S.worker({...o,blob:false}); sc.add(p); S.lightUp(r2,sc,{box:3}); const cam=S.perspCam(w,h,24,[0,1.05,3.2],[0,.88,0]); r2.render(sc,cam); el.innerHTML='<img src="'+c2.toDataURL()+'" style="width:'+w+'px;height:'+h+'px;display:block">'; }
+portrait($('idface'),S.ME,68,80); portrait($('bossface'),{...S.BOSS,mouth:'open'},58,58);
+// PC(가로): 같은 장면을 넓게
+const PW=1440,PH=900, pcv=document.createElement('canvas'), PR=S.renderer(pcv,PW,PH);
+function shotPC(id, built, cam, overlays){ S.lightUp(PR, built.scene, built.sun||{}); PR.render(built.scene,cam); $(id).src=pcv.toDataURL('image/png'); const ph=$(id).parentElement;
+  (overlays||[]).forEach(([key,html,cls,dx=0,dy=0])=>{const v=built.tops[key]; if(!v) return; const [x,y]=S.toScreen(cam,v,PW,PH); const d=document.createElement('div'); d.className=cls; d.innerHTML=html; d.style.left=(x+dx)+'px'; d.style.top=(y+dy)+'px'; ph.appendChild(d);}); }
+shotPC('q01', S.lobby(false), S.perspCam(PW,PH,50,[-.6,3.6,11],[-.6,3.6,-6]), [['me','김사원#4821','tag3',0,-6]]);
+shotPC('q03', S.office({occ:OCC, me:[.4,8.4]}), S.perspCam(PW,PH,46,[0,15,20],[0,0,-3.5]), [['boss','최부장 · NPC','tag3',0,-4],['mgr','박과장 · NPC','tag3',0,-4],['seat14','왔어? 좋은 아침!','bub3',0,-6],['team3팀','3팀','team3'],['team2팀','2팀','team3'],['team1팀','1팀','team3'],['board','사내 게시판','lab3'],['pantry','탕비실','lab3']]);
+window.__done=true;
+</script>
+<script>
+/* ---------- 04 to-do ---------- */
+(()=>{const T=[['자기소개서 1번 문항 쓰기','승인','#d23b3b'],['이력서 한 군데 넣기','결재 대기','#c07a2a'],['30분 산책하기','완료','#2f8f5a'],['','','']];
+  let h='<div style="font:800 15px P">오늘의 할 일</div><div style="font:500 10.5px P;color:#7a8090;margin:3px 0 10px">오늘 실제로 해야 할 일을 적어 보세요. 4개까지 적을 수 있어요.</div>';
+  T.forEach(([t,st,c],i)=>{h+='<div style="background:#fff;border:1px solid #dfe3ea;border-radius:10px;padding:8px 9px;margin-bottom:8px">'+
+   '<div style="display:flex;align-items:center;gap:6px"><span style="font:700 11px P;color:#9aa0ad">'+(i+1)+'</span><span style="flex:1;font:600 12.5px P;'+(st==='완료'?'text-decoration:line-through;color:#8a90a0':'')+(t?'':'color:#b4b9c4;font-weight:500')+'">'+(t||'예) 미뤄 둔 메일 답장하기')+'</span>'+
+   (st==='승인'?'<span style="border:2px solid #d23b3b;color:#d23b3b;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font:800 10px P;transform:rotate(-12deg)">승인</span>':st==='완료'?'<span style="color:#2f8f5a;font:800 16px P">✓</span>':st?'<span style="font:700 10px P;color:'+c+'">'+st+'</span>':'')+'</div>'+
+   (t&&st!=='완료'?'<div style="display:flex;gap:6px;margin-top:7px"><span style="flex:1;text-align:center;border:1px solid #cfd5df;border-radius:7px;padding:5px 0;font:600 10.5px P;'+(st?'color:#9aa0ad;background:#f1f3f7':'')+'">'+(st?'결재 올림':'결재 올리기')+'</span><span style="flex:1;text-align:center;background:#8fd3ff;border-radius:7px;padding:5px 0;font:700 10.5px P;color:#082531">완료</span></div>':'')+'</div>';});
+  document.getElementById('todo').innerHTML=h;})();
+
+/* ---------- 07 board ---------- */
+(()=>{const notes=['오늘 면접 보고 왔어요. 다들 힘내요','3번째 출근, 이제 좀 익숙해요','다음 주에 첫 출근합니다!','커피 맛집은 4층 탕비실','자소서 1번 드디어 끝','오늘은 출근한 것만으로 성공','부장님 칭찬 들었다 ㅎㅎ','다들 퇴근 잘해요','취준 8개월 차, 그래도 출근','신바람기획부 최고'];
+  const col=['#fff59a','#ffd1dc','#c9f2d4','#cfe6ff','#ffe2b8'];let h='';
+  notes.forEach((n,i)=>{const x=10+(i%2)*170+((i*37)%16),y=14+Math.floor(i/2)*122+((i*23)%14),r=((i*29)%9)-4;
+    h+='<div style="position:absolute;left:'+x+'px;top:'+y+'px;width:150px;min-height:92px;background:'+col[i%5]+';box-shadow:0 6px 10px rgba(0,0,0,.25);transform:rotate('+r+'deg);padding:14px 11px 10px;font:600 13px/1.45 P;color:#2a2a2a"><span style="position:absolute;top:-6px;left:68px;width:13px;height:13px;border-radius:50%;background:#d23b3b;box-shadow:0 2px 3px rgba(0,0,0,.3)"></span>'+n+'</div>';});
+  document.getElementById('cork').innerHTML=h;})();
+
+
+/* ---------- 08 done list ---------- */
+document.getElementById('done').innerHTML=[['자기소개서 1번 문항 쓰기','승인 · 완료'],['이력서 한 군데 넣기','승인'],['30분 산책하기','완료']].map(([t,s])=>'<div style="display:flex;justify-content:space-between"><span>✔ '+t+'</span><span style="color:#d23b3b;font-weight:700;font-size:11.5px">'+s+'</span></div>').join('');
+
+</script>
+</body></html>

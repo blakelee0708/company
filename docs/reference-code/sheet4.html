@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@font-face{font-family:P;src:url(PretendardVariable.woff2) format('woff2');font-weight:100 900}body{margin:0;background:#f3efe8;font-family:P}#w{position:relative;width:1240px;height:760px}canvas{position:absolute;left:0;top:0}.t{position:absolute;transform:translateX(-50%);font:800 15px P;color:#3a2f3d;white-space:nowrap}</style>
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script></head><body><div id="w"><canvas id="c"></canvas>
+<div style="position:absolute;left:30px;top:20px"><div style="font:900 26px P;color:#1d2b4f">(주)무한채용 캐릭터 (3D)</div><div style="font:600 14px P;color:#6a6070;margin-top:4px">말랑한 비닐 장난감 느낌 · 몸통은 한 덩어리 회전체, 팔은 이음매 없이 휘는 관 · 캐릭터는 그림자를 받지 않음(줄무늬 없음) · reference-code/toon.js</div></div></div>
+<script type="module">
+import * as S from './scenes4.js';
+const W=1240,H=760; const R=S.renderer(document.getElementById('c'),W,H); const sc=new S.THREE.Scene(); sc.background=new S.THREE.Color(0xf3efe8);
+const fl=new S.THREE.Mesh(new S.THREE.PlaneGeometry(60,60),new S.THREE.MeshStandardMaterial({color:0xece4d8,roughness:.9,envMapIntensity:.3})); fl.rotation.x=-Math.PI/2; fl.receiveShadow=true; sc.add(fl);
+S.lightUp(R,sc,{box:8});
+const L=[[[{...S.ME},0,'남사원 앞'],[{...S.ME},Math.PI,'남사원 뒤'],[{...S.ME,pose:'wave',mouth:'open'},0,'손 흔들기'],[{...S.ME,pose:'walk'},.35,'걷기'],[{...S.ME,pose:'card'},-.3,'카드 찍기'],[{...S.ME,pose:'cup'},0,'커피'],[{...S.BOSS,pose:'beckon',mouth:'open'},0,'부장(NPC) 손짓']],
+ [[{sex:'f',suit:'beige'},0,'여사원 앞'],[{sex:'f',suit:'beige'},Math.PI,'여사원 뒤'],[{sex:'f',suit:'beige',pose:'cheers',mouth:'open'},0,'건배'],[{sex:'f',suit:'navy',pose:'walk'},-.35,'걷기'],[{sex:'f',suit:'charcoal',pose:'clap',closed:true,mouth:'open'},0,'박수'],[{sex:'f',suit:'pink'},.3,'정장 분홍'],[{...S.MGR,pose:'point',mouth:'open'},0,'과장(NPC) 말하기']]];
+const cam=S.perspCam(W,H,30,[0,3.0,17],[0,1.25,0]); cam.updateMatrixWorld();
+const step=new S.THREE.Mesh(new S.THREE.BoxGeometry(14,1.75,1.6),new S.THREE.MeshStandardMaterial({color:0xece4d8,roughness:.9,envMapIntensity:.3})); step.position.set(0,.875,-1.6); step.receiveShadow=true; sc.add(step);
+const w=document.getElementById('w');
+L.forEach((row,r)=>row.forEach(([o,ry,lab],i)=>{const p=S.worker({...o,blob:false}); p.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=false;}}); const x=-5.1+i*1.7, z=r? 1.2:-1.6, y=r?0:1.75; p.position.set(x,y,z); p.rotation.y=ry; sc.add(p);
+  const [sx,sy]=S.toScreen(cam,new S.THREE.Vector3(x,y,z+.5),W,H); const d=document.createElement('div'); d.className='t'; d.textContent=lab; d.style.left=sx+'px'; d.style.top=(sy+4)+'px'; w.appendChild(d);}));
+R.render(sc,cam); window.__done=true;
+</script></body></html>
