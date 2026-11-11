@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>(주)무한채용 — 캐릭터 뷰어</title>
+<style>
+@font-face{font-family:P;src:url(/fonts/PretendardVariable.woff2) format('woff2');font-weight:100 900;font-display:swap}
+body{margin:0;background:#f3efe8;font-family:P,sans-serif;color:#3a2f3d}
+#w{position:relative;width:1240px;height:760px;overflow:hidden}
+canvas{position:absolute;left:0;top:0}
+.t{position:absolute;transform:translateX(-50%);font:800 15px P;color:#3a2f3d;white-space:nowrap}
+#ctl{padding:10px 30px;display:flex;flex-wrap:wrap;gap:6px}
+#ctl button{font:700 13px P;border:2px solid #3a2f3d;border-radius:10px;background:#fff;padding:6px 10px;cursor:pointer}
+#ctl button.on{background:#8fd3ff}
+</style>
+</head>
+<body>
+<div id="w"><canvas id="c"></canvas>
+<div style="position:absolute;left:30px;top:20px"><div style="font:900 26px P;color:#1d2b4f">(주)무한채용 캐릭터 (3D)</div><div style="font:600 14px P;color:#6a6070;margin-top:4px">말랑한 비닐 장난감 느낌 · 몸통은 한 덩어리 회전체, 팔은 이음매 없이 휘는 관 · 캐릭터는 그림자를 받지 않음(줄무늬 없음)</div></div></div>
+<div id="ctl"></div>
+<script type="module" src="/src/viewer.ts"></script>
+</body>
+</html>
