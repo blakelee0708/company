@@ -1,28 +1,80 @@
 # (주)무한채용 — 출근하기
 
-웹 3D 가상 회사. 링크를 누르면 회사 1층 로비에 서 있고, 사원증을 찍고, 엘리베이터를 타고, 내 자리에 앉아 오늘 할 일을 적고, 퇴근할 때 "오늘의 급여"를 받습니다.
+웹 3D 가상 회사. 링크를 누르면 회사 1층 로비에 서 있고, 사원증을 찍고, 엘리베이터를 타고, 내 자리에 앉아 오늘 할 일을 적고, 부장·과장님께 칭찬받고, 탕비실에서 커피 한 잔 하고, 퇴근할 때 "오늘의 급여"를 받습니다.
 
-- 배포: https://company.play-run.workers.dev
+- 배포: https://company.play-run.workers.dev (main에 푸시하면 Cloudflare가 자동 배포)
 - 기준 문서: [docs/PRD.md](docs/PRD.md) · 시안: [docs/mockups/](docs/mockups/) · 참고 코드: [docs/reference-code/](docs/reference-code/)
+- 단계별 캡처: [docs/progress/](docs/progress/)
+- 캐릭터 뷰어: `/viewer.html` (`?still=1` 시안 09 배치, `?still=1&poses=1` 모든 동작 앞·옆)
 
 ## 진행 기록
 
 ### 0단계 — 준비
-- 한 것: docs/에 기획 묶음을 넣고, Vite + TypeScript + Cloudflare Worker(Durable Object 2종) 최소 버전("준비 중" 화면)을 만들었습니다.
-- 확인한 것: `npm run check`, `npm run build`, `npx wrangler deploy --dry-run` 성공.
-- 아직 확인 못 한 것: 없음. 푸시 후 약 1~2분 뒤 https://company.play-run.workers.dev/api/health 가 200을 돌려주는 것까지 확인했습니다.
+- 한 것: docs/에 기획 묶음을 넣고, Vite + TypeScript + Cloudflare Worker(Durable Object 2종) 최소 버전("준비 중" 화면)을 만들어 main에 푸시.
+- 확인한 것: `npm run check`, `npm run build`, `npx wrangler deploy --dry-run` 성공. 푸시 1~2분 뒤 https://company.play-run.workers.dev/api/health 가 200.
+- 아직 확인 못 한 것: 없음.
 
 ### 1단계 — 캐릭터
-- 한 것: `toon.js`의 `worker()`를 `src/character/worker.ts`로 옮겼습니다(숫자 그대로). 팔·다리는 매 프레임 꼭짓점만 다시 계산하는 이음매 없는 관(`Limb`), 얼굴 조각은 재질별로 하나로 합쳐 그리기 횟수를 줄였습니다. 동작 엔진 `src/anim/animator.ts`: 서기·걷기·앉기·타자 + 손 흔들기·손짓·카드 찍기·박수·인사·마시기·건배·기지개·통화·끄덕이기.
-- 확인한 것: 캐릭터 뷰어(`/viewer.html?still=1`)를 시안 09와 나란히 비교(`docs/progress/1/compare-09-characters.png`) — 비율·색·자세가 같습니다. 모든 동작을 앞·옆에서 찍어(`docs/progress/1/poses.png`) 손이 얼굴·몸을 뚫지 않는 것을 확인. 급여 단위 테스트 9개 통과.
-- 아직 확인 못 한 것: 실제 중급 폰에서의 프레임(이 환경은 소프트웨어 렌더링이라 측정 불가).
+- 한 것: `toon.js`의 `worker()`를 `src/character/worker.ts`로 옮김(크기·색 숫자 그대로). 팔·다리는 매 프레임 꼭짓점만 다시 계산하는 이음매 없는 관(`Limb`), 동작 엔진 `src/anim/animator.ts`(서기·걷기·앉기·타자 + 손 흔들기·손짓·카드 찍기·박수·인사·마시기·건배·기지개·통화·끄덕이기).
+- 확인한 것: 뷰어를 시안 09와 나란히 비교(`docs/progress/1/compare-09-characters.png`) — 비율·색·자세 같음. 모든 동작을 앞·옆에서 찍어(`docs/progress/1/poses.png`) 손이 얼굴·몸을 뚫지 않음. 급여 단위 테스트 통과.
+- 아직 확인 못 한 것: 실제 폰에서의 프레임(이 작업 환경은 GPU가 없어 소프트웨어 렌더링으로만 봄).
+
+### 2단계 — 혼자 출근
+- 한 것: 타이틀(HTML로 즉시 표시, 3D는 뒤에서 받음) → 캐릭터 선택(남·여, 정장 6색, 오늘의 이름) → 로비(바닥 탭/WASD 걷기, A* 길 찾기, 게이트 1.5m 안 [카드 찍기], 리더기 초록·날개 열림·사원증 카드) → 엘리베이터("빨리 타!", 문 닫힘, 1F→층 표시, 띵) → 사무실(문 위 전체 1.5초 → 등 뒤 시점, 부장 인사, 빈자리 하늘색 동그라미) → 자리에 앉기(의자 빼기, 어깨 너머로 모니터에 다가간 뒤 PC 창) → 할 일 4칸(30자, 결재 올리기·완료) → 퇴근 확인 → 가방 메고 손 흔들기 → 급여 명세서.
+- 확인한 것: Playwright로 폰(390×844)·PC(1440×900) 모두 처음부터 퇴근 카드까지 눌러 봄(`docs/progress/2/`). 2시간 34분 → 26,750원 표시 확인. 급여 테스트(0·29·30·59·60·154분) 통과.
+- 아직 확인 못 한 것: 실제 iOS 사파리·카카오톡 앱 안 브라우저에서 직접 눌러 보기.
+
+### 3단계 — 부장·과장 NPC
+- 한 것: 앉아 있으면 2~4분마다 부장이나 과장이 걸어와 대화창(얼굴 그림·한 글자씩·선택지·답·12초 무응답 처리), 결재(10~25초 뒤 과장 도장 → 10~20초 뒤 부장 도장 = 승인, 부장 자리로 가서 [결재 부탁드립니다]도 됨), 완료 칭찬, 4개 다 하면 부장이 일어나 박수, 일어날 때 30% 말 걸기, 같이 탕비실 걷기(말풍선 3~4줄), 상사 머리 위 [인사하기]·[결재 부탁드립니다]·[고민 상담], 점심(12시)·저녁(18시 이후) 한마디.
+- 확인한 것: 대사 규칙 테스트(30분 동안 같은 대사 두 번 안 나옴, 할 일 없으면 {할일} 대사 안 나옴, 금지 표현 없음). 브라우저에서 과장 → 부장 결재 도장 두 개, 대화창 캡처(`docs/progress/2/*-05-dialog.png`).
+- 아직 확인 못 한 것: 실제 30분을 꽉 채워 앉아 있기(시간을 12배 빠르게 하는 `?fast=1`과 단위 테스트로 대신 확인).
+
+### 4단계 — 탕비실
+- 한 것: 사무실 오른쪽 벽 문 너머 탕비실(커피 머신·정수기·간식 바구니·냉장고·높은 테이블 2개·창문·"오늘도 수고 많으십니다 ☕" 액자). [커피 마시기] → 아메리카노·믹스커피·라떼·녹차, 2초 김 → 컵 들고 마시기 → 토스트, 커피 수 +1. [간식 집기], [건배](짠!), 컵 들고 다니기·자리에 앉으면 책상에 내려놓기. 탕비실에 들어가면 카메라가 방 쪽으로 돌아감.
+- 확인한 것: 브라우저에서 커피 4종을 차례로 마시고 퇴근 카드의 "마신 커피 4잔" 확인.
+- 아직 확인 못 한 것: 없음.
+
+### 5단계 — 같이 출근(실시간)
+- 한 것: `DeptRoom`(부서 하나 = Durable Object 하나, 정원 20, WebSocket Hibernation, 위치는 묶어서 200ms마다), `BuildingRoom`(건물 하나: 부서 인원 → 배정, 사내 게시판 최근 40개·신고 3번이면 가림·서버에서 한 번 더 걸러내기). 자리표, NPC 교체(목표 = max(0, 10 − 실제 사람), 30초에 한 명씩 나가고 15초에 한 명씩 들어옴, 사람이 NPC 자리를 고르면 "아, 여기 앉으세요!"), 인사·박수·건배·완료 알림, 탕비실 같이 가요(10초 무응답 = 다음에요, 수락하면 옆에 붙어 걷기), 건물 가득 차면 타이틀 안내 + 30초마다 다시 시도.
+- 확인한 것: `wrangler dev`로 두 브라우저가 같은 부서에서 서로 보임, 인사 토스트, 탕비실 같이 가기 거절·수락 둘 다, 게시판 공유, 서버 걸러내기(`docs/progress/5/`). 가상 사용자 120명 부하 시험: 100명이 부서마다 정확히 20명, 넘친 20명은 모두 "가득 참"을 받음, 오류 0.
+- 아직 확인 못 한 것: 실제 배포(Cloudflare)에서 120명 부하 시험(로컬 workerd로만 함).
+
+### 6단계 — 마무리
+- 한 것: 조작법 카드, 결과 이미지 저장(1080×1920, 일반 브라우저는 내려받기 · 아이폰·앱 안 브라우저는 길게 눌러 저장), og:image(1200×630), 입장 속도(타이틀은 HTML로 바로 · 3D는 나눠 받기 · 글꼴은 자주 쓰는 한글 2,350자로 줄여 2MB → 0.43MB · 다음 장면 미리 만들기 · 실제 사이트에서 셰이더 오류 검사 끔), PC 창·게시판·퇴근 카드 뒤 3D는 덜 그림.
+- 확인한 것: 아래 "최종 확인" 참고.
+- 아직 확인 못 한 것: 실제 4G 폰에서 5초 안 입장(이 환경에서는 측정 불가, 받는 크기로 추정).
 
 ## 개발
 
 ```bash
 npm install
-npm run dev        # 화면만
-npm run check      # 타입 검사
-npm test           # 단위 테스트
-npm run build && npx wrangler dev   # Worker + Durable Object 포함
+npm run dev        # 화면만(서버 없으면 혼자 출근으로 동작)
+npm run check      # 타입 검사(화면 + Worker)
+npm test           # 단위 테스트(급여, 배정, NPC 교체, 대사 규칙, 걸러내기)
+npx wrangler dev   # Worker + Durable Object 포함(빌드 후 http://127.0.0.1:8787)
+node tools/flow.mjs http://127.0.0.1:8787/ phone docs/progress/2   # 처음부터 퇴근까지(폰)
+node tools/duo.mjs http://127.0.0.1:8787/ docs/progress/5          # 두 기기 같이 출근
+node tools/load.mjs http://127.0.0.1:8787 120 20                   # 가상 사용자 120명
+```
+
+시험용 주소 옵션: `?fast=1`(상사 방문·결재 시간 12배 빠르게).
+
+## 구조
+
+```
+src/
+  main.ts        타이틀(HTML) → 게임 나눠 받기
+  game.ts        화면 흐름(타이틀·선택·로비·엘리베이터·사무실·퇴근)
+  core/          렌더(clay.js 옮김), 장면·카메라·입력(stage), 세션, 소리
+  character/     worker(toon.js 옮김), 조각·재질, 얼굴 그림
+  anim/          동작 엔진
+  world/         lobby, office, pantry, scenes(엘리베이터·타이틀·선택), kit(scenes4.js 도형 + InstancedMesh), nav(A*), actor, sky
+  npc/           boss(부장·과장), staff(사원), lobbyNpc, lines(대사표), looks
+  office/        사무실 안 모든 일(officeCtl)
+  ui/            hud, dialog, pc, board, payslip, share(결과 이미지), guide
+  net/           room(부서 방 연결)
+  shared/        protocol, lineFilter, words, pay, consts, assign, npcRule, names, rand
+  server/        worker, deptRoom, buildingRoom
+tests/           단위 테스트
+tools/           Playwright 흐름·두 기기·부하 시험, 글꼴 줄이기, 시안 비교
 ```

@@ -1,7 +1,7 @@
 // 캐릭터 worker() — reference-code/toon.js의 worker()를 TypeScript로 옮기고, 움직일 수 있게 뼈대를 나눔.
 // 몸통은 회전체 하나(셔츠 V·넥타이·라펠·단추는 셰이더), 팔·다리는 이음매 없이 휘는 관, 손은 공.
 // 앞이 +z, 발바닥 y=0, 키 약 1.5. 캐릭터는 그림자를 드리우기만 하고 받지 않는다.
-import { THREE, RoundedBoxGeometry, OL, SUITS, TIES, SKIN, HAIR_M, HAIR_F, HAIR_G, toon, flat, part, ellipsoid, merge, Limb, skinMat, type SuitName } from './parts';
+import { THREE, RoundedBoxGeometry, OL, SUITS, TIES, SKIN, HAIR_M, HAIR_F, HAIR_G, toon, flat, part, ellipsoid, merge, mergeVC, VC_FLAT, VC_LIT, Limb, skinMat, type SuitName } from './parts';
 import { Animator, type BasePose, type Action } from '../anim/animator';
 
 export interface Look {
@@ -58,8 +58,8 @@ function torsoGeo(): THREE.BufferGeometry {
   if (TORSO) return TORSO;
   const prof: Array<[number, number]> = [[0, 0.25], [0.2, 0.255], [0.235, 0.28], [0.245, 0.4], [0.255, 0.54], [0.245, 0.62], [0.2, 0.665], [0.12, 0.685], [0, 0.69]];
   const curve = new THREE.SplineCurve(prof.map(([r, y]) => new THREE.Vector2(r, y)));
-  const pts = curve.getPoints(48).map((p) => new THREE.Vector2(Math.max(0, p.x), p.y));
-  const g = new THREE.LatheGeometry(pts, 56);
+  const pts = curve.getPoints(36).map((p) => new THREE.Vector2(Math.max(0, p.x), p.y));
+  const g = new THREE.LatheGeometry(pts, 44);
   g.scale(1, 1, 0.72);
   g.computeVertexNormals();
   TORSO = g;
@@ -70,7 +70,7 @@ function torsoGeo(): THREE.BufferGeometry {
 export const HC = 1.0, HX = 0.43, HY = 0.39, HZ = 0.4;
 type Region = (az: number, y: number) => number;
 /** 머리카락: 머리보다 조금 큰 공을, 머리선 아래에서는 안쪽으로 밀어 넣는다(닫힌 면) */
-function hairGeo(region: Region, k = 1.06, flare = 0, inner = 0.97, ws = 200, hs = 150): THREE.BufferGeometry {
+function hairGeo(region: Region, k = 1.06, flare = 0, inner = 0.97, ws = 128, hs = 96): THREE.BufferGeometry {
   const g = new THREE.SphereGeometry(1, ws, hs), p = g.attributes.position as THREE.BufferAttribute;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i), z = p.getZ(i), az = Math.atan2(x, z);
@@ -85,31 +85,36 @@ function hairGeo(region: Region, k = 1.06, flare = 0, inner = 0.97, ws = 200, hs
 const mixA = (front: number, side: number, back: number, az: number): number => { const c = Math.cos(az); return c >= 0 ? side + (front - side) * c : side + (back - side) * -c; };
 
 type HairKind = 'm' | 'f' | 'bald';
-const HAIR = new Map<HairKind, THREE.BufferGeometry>();
-function hairFor(kind: HairKind): THREE.BufferGeometry {
-  let g = HAIR.get(kind);
+const HAIR = new Map<string, THREE.BufferGeometry>();
+/** 머리카락 도형(가까이 = 촘촘, 멀리 = 성김) */
+function hairFor(kind: HairKind, lo = false): THREE.BufferGeometry {
+  const key = kind + (lo ? ':lo' : '');
+  let g = HAIR.get(key);
   if (g) return g;
+  const ws = lo ? 56 : 128, hs = lo ? 42 : 96;
   if (kind === 'bald') {
-    g = hairGeo((az, y) => Math.min((Math.abs(az) - 1.25) * 0.5, (2.6 - Math.abs(az)) * 0.5, 0.42 - y, y + 0.2), 1.05, 0);
+    g = hairGeo((az, y) => Math.min((Math.abs(az) - 1.25) * 0.5, (2.6 - Math.abs(az)) * 0.5, 0.42 - y, y + 0.2), 1.05, 0, 0.97, ws, hs);
   } else if (kind === 'f') {
     // 단발: 정수리에서 턱선까지, 앞은 일자 앞머리(눈썹 위), 얼굴 부분만 비움
-    g = hairGeo((az, y) => Math.min(Math.max(y - 0.31, (Math.abs(az) - 1.1) * 0.55), y + 0.64), 1.09, 0.12);
+    g = hairGeo((az, y) => Math.min(Math.max(y - 0.31, (Math.abs(az) - 1.1) * 0.55), y + 0.64), 1.09, 0.12, 0.97, ws, hs);
   } else {
     // 옆으로 넘긴 짧은 머리 + 정수리 삐침
     const fr = (az: number): number => 0.34 + 0.13 * Math.tanh(az * 2.2) - 0.06 * Math.exp(-((az + 0.35) ** 2) / 0.03);
-    const base = hairGeo((az, y) => y - mixA(fr(az), 0.14, -0.42, az), 1.05, 0);
+    const base = hairGeo((az, y) => y - mixA(fr(az), 0.14, -0.42, az), 1.05, 0, 0.97, ws, hs);
     const tuft = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.4, 0.02), new THREE.Vector3(0.03, 0.5, 0.03), new THREE.Vector3(0.1, 0.53, 0.05)]);
-    const tg = new THREE.TubeGeometry(tuft, 16, 0.016, 10, false);
+    const tg = new THREE.TubeGeometry(tuft, lo ? 8 : 16, 0.016, lo ? 6 : 10, false);
     g = merge([[base, new THREE.Matrix4()], [tg, new THREE.Matrix4()]]);
   }
-  HAIR.set(kind, g);
+  HAIR.set(key, g);
   return g;
 }
+/** 카메라 위치(멀리 있는 사람은 성긴 머리) */
+export const LOD = { cam: new THREE.Vector3(), far: Infinity };
 
 const onFace = (x: number, y: number): number => HZ * Math.sqrt(Math.max(0, 1 - (x / HX) ** 2 - (y / HY) ** 2));
 const M4 = (o: THREE.Object3D): THREE.Matrix4 => { o.updateMatrix(); return o.matrix.clone(); };
 
-interface FaceGeo { skin: THREE.BufferGeometry; eyes: THREE.BufferGeometry; whites: THREE.BufferGeometry; closed: THREE.BufferGeometry; blush: THREE.BufferGeometry; smile: THREE.BufferGeometry; open: THREE.BufferGeometry; glasses: THREE.BufferGeometry | null; brows: THREE.BufferGeometry }
+interface FaceGeo { skin: THREE.BufferGeometry; eyesOpen: THREE.BufferGeometry; closed: THREE.BufferGeometry; deco: THREE.BufferGeometry; smile: THREE.BufferGeometry; open: THREE.BufferGeometry; brows: THREE.BufferGeometry }
 const FACE = new Map<string, FaceGeo>();
 /** 얼굴 조각을 재질별로 하나씩 합친 도형(모든 캐릭터가 같이 씀) */
 function faceFor(ears: boolean, glasses: boolean): FaceGeo {
@@ -118,7 +123,7 @@ function faceFor(ears: boolean, glasses: boolean): FaceGeo {
   if (hit) return hit;
   const O = new THREE.Object3D();
   const at = (x: number, y: number, z: number): THREE.Matrix4 => { O.position.set(x, y, z); O.rotation.set(0, 0, 0); O.scale.set(1, 1, 1); return M4(O); };
-  const skin: Array<[THREE.BufferGeometry, THREE.Matrix4]> = [[ellipsoid(HX, HY, HZ, 64, 48), new THREE.Matrix4()]];
+  const skin: Array<[THREE.BufferGeometry, THREE.Matrix4]> = [[ellipsoid(HX, HY, HZ, 48, 36), new THREE.Matrix4()]];
   if (ears) for (const s of [-1, 1]) skin.push([ellipsoid(0.06, 0.085, 0.05, 20, 14), at(s * 0.42, 0.02, 0)]);
   const eyes: Array<[THREE.BufferGeometry, THREE.Matrix4]> = [], whites: typeof eyes = [], closed: typeof eyes = [], blush: typeof eyes = [], brows: typeof eyes = [];
   for (const s of [-1, 1]) {
@@ -135,21 +140,20 @@ function faceFor(ears: boolean, glasses: boolean): FaceGeo {
   const open = merge([[new THREE.SphereGeometry(0.05, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M4(O)]]);
   O.scale.set(1, 1, 1); O.position.set(0, -0.13, onFace(0, -0.13) + 0.004); O.rotation.set(0, 0, Math.PI + Math.PI * 0.1);
   const smile = merge([[new THREE.TorusGeometry(0.04, 0.009, 8, 24, Math.PI * 0.8), M4(O)]]);
-  let gl: THREE.BufferGeometry | null = null;
+  const deco: Array<[THREE.BufferGeometry, THREE.Matrix4, number]> = blush.map(([g, m]) => [g, m, 0xffa79c]);
   if (glasses) {
-    const gg: typeof eyes = [];
-    for (const s of [-1, 1]) gg.push([new THREE.TorusGeometry(0.085, 0.011, 8, 32), at(s * 0.15, 0.06, onFace(s * 0.15, 0.06) + 0.03)]);
-    O.position.set(0, 0.07, onFace(0, 0.07) + 0.03); O.rotation.set(0, 0, Math.PI / 2); gg.push([new THREE.CapsuleGeometry(0.008, 0.06, 4, 8), M4(O)]);
-    gl = merge(gg);
+    for (const s of [-1, 1]) deco.push([new THREE.TorusGeometry(0.085, 0.011, 8, 32), at(s * 0.15, 0.06, onFace(s * 0.15, 0.06) + 0.03), OL]);
+    O.position.set(0, 0.07, onFace(0, 0.07) + 0.03); O.rotation.set(0, 0, Math.PI / 2); deco.push([new THREE.CapsuleGeometry(0.008, 0.06, 4, 8), M4(O), OL]);
   }
-  const f: FaceGeo = { skin: merge(skin), eyes: merge(eyes), whites: merge(whites), closed: merge(closed), blush: merge(blush), smile, open, glasses: gl, brows: merge(brows) };
+  const eyesOpen = mergeVC([...eyes.map(([g, m]) => [g, m, OL] as [THREE.BufferGeometry, THREE.Matrix4, number]), ...whites.map(([g, m]) => [g, m, 0xffffff] as [THREE.BufferGeometry, THREE.Matrix4, number])]);
+  const f: FaceGeo = { skin: merge(skin), eyesOpen, closed: merge(closed), deco: mergeVC(deco), smile, open, brows: merge(brows) };
   FACE.set(key, f);
   return f;
 }
 
 /* ---------------- 사람 ---------------- */
 const V = (x: number, y: number, z: number): THREE.Vector3 => new THREE.Vector3(x, y, z);
-let CARD_G: THREE.BufferGeometry | null = null, LAN_G: THREE.BufferGeometry | null = null, SHOE_G: THREE.BufferGeometry | null = null, HAND_G: THREE.BufferGeometry | null = null;
+let CARD_G: THREE.BufferGeometry | null = null, SHOE_G: THREE.BufferGeometry | null = null, HAND_G: THREE.BufferGeometry | null = null;
 let CUP: THREE.Group | null = null, IDCARD_G: THREE.BufferGeometry | null = null, BAG: THREE.Group | null = null, PHONE_G: THREE.BufferGeometry | null = null, BAR_G: THREE.BufferGeometry | null = null;
 
 function cupProto(): THREE.Group {
@@ -198,6 +202,11 @@ export class Worker {
   /** 평소 입 모양(true=벌림) */
   mouthDefault = false;
   private blinkT = 2 + Math.random() * 3;
+  private hairHi!: THREE.Mesh;
+  private hairLo!: THREE.Mesh;
+  private far = false;
+  /** 늘 촘촘한 머리(얼굴 그림·선택 화면) */
+  hiRes = false;
   private talkT = 0;
 
   constructor(o: Look = {}) {
@@ -212,26 +221,28 @@ export class Worker {
     g.add(this.body);
     const B = new THREE.Group(); B.position.y = -0.3; this.body.add(B);
     // 다리 + 구두
-    if (!SHOE_G) SHOE_G = ellipsoid(0.088, 0.058, 0.125, 24, 16);
+    if (!SHOE_G) SHOE_G = ellipsoid(0.088, 0.058, 0.125, 18, 12);
     this.legs = { L: new Limb(0.078, this.pantsM, g, 10, 12, true), R: new Limb(0.078, this.pantsM, g, 10, 12, true) };
-    this.shoes = { L: part(SHOE_G, shoeM, g), R: part(SHOE_G, shoeM, g) };
+    for (const k of ['L', 'R'] as const) if (this.legs[k].capB) this.legs[k].capB!.castShadow = false;
+    this.shoes = { L: part(SHOE_G, shoeM, g, 0, 0, 0, false), R: part(SHOE_G, shoeM, g, 0, 0, 0, false) };
     // 몸통
     const t = torsoMat(suitC, L);
     this.torsoU = t.u;
     part(torsoGeo(), t.mat, B);
     // 사원증과 목줄
     if (L.card !== false) {
-      const card = new THREE.Group(); card.position.set(-0.13, 0.4, 0.17); card.rotation.set(-0.08, -0.25, 0.05); B.add(card);
-      if (!CARD_G) CARD_G = new RoundedBoxGeometry(0.085, 0.11, 0.012, 2, 0.012);
-      part(CARD_G, toon(0xffffff), card);
-      const band = new THREE.Mesh(new THREE.PlaneGeometry(0.085, 0.025), flat(0x1d2b4f)); band.position.set(0, 0.04, 0.0075); card.add(band);
-      const ph = new THREE.Mesh(new THREE.CircleGeometry(0.016, 16), flat(0xf5c9b3)); ph.position.set(0, 0.002, 0.0075); card.add(ph);
-      if (!LAN_G) LAN_G = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.1, 0.66, 0.1), V(-0.13, 0.56, 0.155), V(-0.135, 0.46, 0.175)]), 12, 0.008, 6, false);
-      part(LAN_G, toon(0x4c8fe0), B, 0, 0, 0, false);
+      if (!CARD_G) {
+        const O = new THREE.Object3D(); O.position.set(-0.13, 0.4, 0.17); O.rotation.set(-0.08, -0.25, 0.05); O.updateMatrix();
+        const cm = O.matrix.clone(), at = (x: number, y: number, z: number): THREE.Matrix4 => cm.clone().multiply(new THREE.Matrix4().makeTranslation(x, y, z));
+        const lan = new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(-0.1, 0.66, 0.1), V(-0.13, 0.56, 0.155), V(-0.135, 0.46, 0.175)]), 12, 0.008, 6, false);
+        // 사원증 + 파란 목줄을 하나로(띠·사진은 셰이딩이 거의 없어 보이게 밝은 색)
+        CARD_G = mergeVC([[new RoundedBoxGeometry(0.085, 0.11, 0.012, 2, 0.012), cm, 0xffffff], [new THREE.PlaneGeometry(0.085, 0.025), at(0, 0.04, 0.0075), 0x1d2b4f], [new THREE.CircleGeometry(0.016, 16), at(0, 0.002, 0.0075), 0xf5c9b3], [lan, new THREE.Matrix4(), 0x4c8fe0]]);
+      }
+      part(CARD_G, VC_LIT, B, 0, 0, 0, false);
     }
     // 팔(이음매 없는 관) + 손(공)
     this.arms = { L: new Limb(0.066, this.suitM, B, 18, 14), R: new Limb(0.066, this.suitM, B, 18, 14) };
-    if (!HAND_G) HAND_G = new THREE.SphereGeometry(0.068, 24, 16);
+    if (!HAND_G) HAND_G = new THREE.SphereGeometry(0.068, 18, 12);
     this.hands = { L: part(HAND_G, skin, B), R: part(HAND_G, skin, B) };
     // 머리
     this.head.position.y = HC;
@@ -242,16 +253,17 @@ export class Worker {
     part(face.skin, skin, H);
     const hairC = L.hairC ?? (fem ? HAIR_F : HAIR_M);
     part(face.brows, toon(hairC === HAIR_G ? 0x6d6a68 : hairC), H, 0, 0, 0, false);
-    const eo = part(face.eyes, flat(OL), H, 0, 0, 0, false), ew = part(face.whites, flat(0xffffff), H, 0, 0, 0, false);
-    this.eyesOpen = [eo, ew];
+    this.eyesOpen = [part(face.eyesOpen, VC_FLAT, H, 0, 0, 0, false)];
     this.eyesClosed = part(face.closed, flat(OL), H, 0, 0, 0, false);
     this.eyesClosed.visible = false;
-    part(face.blush, flat(0xffa79c), H, 0, 0, 0, false);
+    part(face.deco, VC_FLAT, H, 0, 0, 0, false);
     this.mouthSmile = part(face.smile, flat(0xb2524b), H, 0, 0, 0, false);
     this.mouthOpen = part(face.open, flat(0xc4574f), H, 0, 0, 0, false);
     this.mouthOpen.visible = false;
-    if (face.glasses) part(face.glasses, flat(OL), H, 0, 0, 0, false);
-    part(hairFor(bald ? 'bald' : fem ? 'f' : 'm'), toon(hairC), H);
+    const hk: HairKind = bald ? 'bald' : fem ? 'f' : 'm';
+    this.hairHi = part(hairFor(hk), toon(hairC), H);
+    this.hairLo = part(hairFor(hk, true), toon(hairC), H);
+    this.hairLo.visible = false;
     this.anim = new Animator();
     this.root.traverse((m) => { if ((m as THREE.Mesh).isMesh) (m as THREE.Mesh).receiveShadow = false; });
     this.update(0);
@@ -266,8 +278,8 @@ export class Worker {
     const sm = toon(c), pm = toon(new THREE.Color(c).multiplyScalar(0.82).getHex());
     this.suitM = sm; this.pantsM = pm;
     for (const k of ['L', 'R'] as const) {
-      this.arms[k].mesh.material = sm; this.arms[k].capA.material = sm;
-      this.legs[k].mesh.material = pm; this.legs[k].capA.material = pm; if (this.legs[k].capB) this.legs[k].capB!.material = pm;
+      this.arms[k].mesh.material = sm;
+      this.legs[k].mesh.material = pm; if (this.legs[k].capB) this.legs[k].capB!.material = pm;
     }
   }
 
@@ -316,6 +328,8 @@ export class Worker {
   talk(sec: number): void { this.talking = sec; }
 
   update(dt: number): void {
+    const far = !this.hiRes && this.root.position.distanceToSquared(LOD.cam) > LOD.far * LOD.far;
+    if (far !== this.far) { this.far = far; this.hairHi.visible = !far; this.hairLo.visible = far; }
     const st = this.anim.update(dt);
     // 몸 숙이기, 위아래
     this.body.rotation.x = st.bow;

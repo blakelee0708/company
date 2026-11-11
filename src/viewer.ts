@@ -55,7 +55,8 @@ for (const a of acts) btn(a, () => { for (const { w } of all) { if (a === 'drink
 btn('talk', () => { for (const { w } of all) w.talk(2); });
 
 let last = performance.now();
-if (still) {
+const og = new URLSearchParams(location.search).has('og');
+if (og) { /* 아래에서 */ } else if (still) {
   for (let i = 0; i < 40; i++) for (const { w } of all) w.update(0.02);
   for (const { w, it } of all) { if (it[0].mouth) w.setMouth(true); }
   R.render(sc, cam);
@@ -103,4 +104,27 @@ if (new URLSearchParams(location.search).has('poses')) {
     R.render(sc, cm);
     const d = document.createElement('div'); d.className = 't'; d.style.fontSize = '12px'; d.textContent = c.lab; d.style.left = x0 + cw / 2 + 'px'; d.style.top = y0 + 4 + 'px'; wrap.appendChild(d);
   });
+}
+
+// ?og=1 : 미리보기 이미지(1200×630)
+if (new URLSearchParams(location.search).has('og')) {
+  void (async () => {
+    const { buildTitle } = await import('./world/scenes');
+    const OW = 1200, OH = 630;
+    wrap.style.width = OW + 'px'; wrap.style.height = OH + 'px';
+    wrap.querySelectorAll('div').forEach((e) => e.remove());
+    document.getElementById('ctl')?.remove();
+    R.setSize(OW, OH);
+    const t = buildTitle();
+    lightUp(R, t.scene, { sun: [-6, 14, 10], box: 12 });
+    const m = new Worker({ ...ME }); m.root.position.set(1.0, 0, 6.6); m.root.rotation.y = -0.45; m.play('wave', Infinity); m.mouthDefault = true;
+    const f = new Worker({ sex: 'f', suit: 'beige' }); f.root.position.set(2.3, 0, 6.2); f.root.rotation.y = -0.6; f.play('wave', Infinity); f.mouthDefault = true;
+    for (const w of [m, f]) { w.root.scale.setScalar(1.15); w.root.traverse((o) => { if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).castShadow = true; }); t.scene.add(w.root); }
+    for (let i = 0; i < 40; i++) { m.update(0.02); f.update(0.02); }
+    const cam = perspCam(OW, OH, 40, [-5.0, 2.6, 15], [-2.4, 3.4, 0]);
+    R.render(t.scene, cam);
+    wrap.insertAdjacentHTML('beforeend', `<div style="position:absolute;left:70px;top:150px;color:#1d2b4f"><div style="font:700 26px P;letter-spacing:8px">(주)무한채용</div><div style="font:900 104px P;margin-top:6px;text-shadow:0 6px 0 #fff">출근하기</div><div style="font:700 26px P;margin-top:14px;color:#4a5878">누구나, 언제든 채용합니다</div><div style="margin-top:30px;display:inline-block;background:#8fd3ff;border:3px solid #3a2f3d;border-radius:18px;box-shadow:0 5px 0 #3a2f3d;padding:12px 28px;font:800 26px P;color:#14304a">오늘도 출근해 볼까요?</div></div>`);
+    await document.fonts.ready;
+    (window as unknown as { __done: boolean }).__done = true;
+  })();
 }

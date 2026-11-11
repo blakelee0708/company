@@ -1,0 +1,29 @@
+.ps-wrap { position: absolute; inset: 0; background: linear-gradient(#1b2547, #0e1428); z-index: 35; animation: fin .5s; }
+.ps-scroll { position: absolute; inset: 0; bottom: calc(150px + env(safe-area-inset-bottom)); overflow-y: auto; padding: calc(38px + env(safe-area-inset-top)) 18px 20px; touch-action: pan-y; }
+.ps-card { position: relative; max-width: 420px; margin: 0 auto; background: #fbfaf6; border-radius: 18px; padding: 20px 20px 18px; box-shadow: 0 20px 50px rgba(0, 0, 0, .4); color: #1d2433; }
+.ps-head { display: flex; align-items: center; gap: 8px; color: #1d2b4f; }
+.ps-head b { font: 800 20px P; } .ps-head span { font: 700 13px P; }
+.ps-date { font: 500 11.5px P; color: #7a8090; margin-top: 2px; }
+.ps-who { font: 600 12.5px P; color: #3a4152; margin-top: 2px; }
+.ps-seal { position: absolute; right: 18px; top: 18px; width: 74px; height: 74px; border: 3px solid #d23b3b; border-radius: 50%; color: #d23b3b; display: flex; align-items: center; justify-content: center; text-align: center; font: 800 12px/1.2 P; transform: rotate(-14deg); opacity: .9; animation: stp .5s .3s both; }
+.ps-dash { border-top: 1px dashed #cfd3dc; }
+.ps-line { display: flex; justify-content: space-between; font: 600 13px P; color: #4a5164; gap: 8px; }
+.ps-cap { text-align: center; margin: 14px 0 2px; font: 500 12px P; color: #7a8090; }
+.ps-pay { text-align: center; font: 800 46px P; color: #d2462f; letter-spacing: -1px; }
+.ps-pay span { font: 700 20px P; color: #1d2433; }
+.ps-note { text-align: center; font: 500 11px P; color: #8a90a0; }
+.ps-hint { text-align: center; font: 600 12px P; color: #c07a2a; margin-top: 8px; word-break: keep-all; }
+.ps-t { font: 700 12.5px P; color: #1d2433; margin-bottom: 6px; }
+.ps-todos { font: 500 13px/1.9 P; }
+.ps-row { display: flex; justify-content: space-between; gap: 8px; }
+.ps-row span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-mk { color: #d23b3b; font-weight: 700; font-size: 11.5px; white-space: nowrap; }
+.ps-stats { display: flex; gap: 8px; margin-top: 10px; }
+.ps-stats div { flex: 1; background: #eef1f6; border-radius: 10px; padding: 8px; text-align: center; font: 500 11px P; color: #6a7080; }
+.ps-stats b { display: block; font: 800 17px P; color: #1d2433; }
+.ps-cheer { text-align: center; font: 600 11.5px P; color: #4a5164; margin-top: 8px; }
+.ps-quote { margin-top: 14px; background: #fff3e2; border-radius: 12px; padding: 12px; text-align: center; }
+.ps-quote div { font: 600 10.5px P; color: #c07a2a; }
+.ps-quote p { font: 700 15px/1.45 P; margin: 4px 0 0; word-break: keep-all; }
+.ps-dock { pointer-events: auto; }
+.pc-mode .ps-dock { left: 50%; right: auto; width: 420px; margin-left: -210px; bottom: 28px; }

@@ -61,6 +61,21 @@ export function merge(list: Array<[THREE.BufferGeometry, THREE.Matrix4]>): THREE
   return out;
 }
 
+/** 색이 다른 조각을 꼭짓점 색으로 하나로 합침 */
+export function mergeVC(list: Array<[THREE.BufferGeometry, THREE.Matrix4, number]>): THREE.BufferGeometry {
+  const gs = list.map(([g, m, c]) => {
+    const x = g.clone(); x.applyMatrix4(m);
+    for (const k of Object.keys(x.attributes)) if (k !== 'position' && k !== 'normal' && k !== 'uv') x.deleteAttribute(k);
+    const col = new THREE.Color(c), n = x.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { a[i * 3] = col.r; a[i * 3 + 1] = col.g; a[i * 3 + 2] = col.b; }
+    x.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    return ensureIndex(x);
+  });
+  return mergeBufferGeometries(gs, false)!;
+}
+export const VC_FLAT = new THREE.MeshBasicMaterial({ vertexColors: true });
+export const VC_LIT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0, envMapIntensity: 0.4 });
+
 /** 합치기 전에 모두 index가 있게 맞춤 */
 export function ensureIndex(g: THREE.BufferGeometry): THREE.BufferGeometry {
   if (!g.index) { const n = g.attributes.position.count, a: number[] = new Array(n); for (let i = 0; i < n; i++) a[i] = i; g.setIndex(a); }
@@ -73,7 +88,7 @@ const _c = new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(0,
 export class Limb {
   readonly geo: THREE.BufferGeometry;
   readonly mesh: THREE.Mesh;
-  readonly capA: THREE.Mesh;
+  readonly capA: THREE.Mesh | null;
   readonly capB: THREE.Mesh | null;
   private readonly T: number;
   private readonly R: number;
@@ -82,7 +97,7 @@ export class Limb {
   private readonly P: THREE.Vector3[] = [];
   private readonly Tn: THREE.Vector3[] = [];
   private readonly N: THREE.Vector3;
-  constructor(public radius: number, mat: THREE.Material, parent: THREE.Object3D, T = 18, R = 14, capEnd = false) {
+  constructor(public radius: number, mat: THREE.Material, parent: THREE.Object3D, T = 18, R = 14, capEnd = false, capStart = false) {
     this.T = T; this.R = R;
     const nv = (T + 1) * (R + 1);
     this.pos = new Float32Array(nv * 3);
@@ -102,7 +117,7 @@ export class Limb {
     this.mesh = part(g, mat, parent);
     this.mesh.frustumCulled = false;
     const sg = sphereGeo(radius);
-    this.capA = part(sg, mat, parent);
+    this.capA = capStart ? part(sg, mat, parent) : null;
     this.capB = capEnd ? part(sg, mat, parent) : null;
   }
   /** pts: 곡선이 지나는 점들(2~5개) */
@@ -137,7 +152,7 @@ export class Limb {
     }
     (this.geo.attributes.position as THREE.BufferAttribute).needsUpdate = true;
     (this.geo.attributes.normal as THREE.BufferAttribute).needsUpdate = true;
-    this.capA.position.copy(pts[0]);
+    if (this.capA) this.capA.position.copy(pts[0]);
     if (this.capB) this.capB.position.copy(pts[pts.length - 1]);
   }
 }

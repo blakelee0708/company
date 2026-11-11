@@ -4,10 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>(주)무한채용 — 출근하기</title>
-<meta name="theme-color" content="#1d2b4f">
+<meta name="description" content="누구나, 언제든 채용합니다. 사원증을 찍고 출근해서 오늘 할 일을 적고, 칭찬받고, 커피 한 잔 하고, 퇴근하면 오늘의 급여가 나와요.">
+<meta name="theme-color" content="#8fd0ff">
+<meta property="og:type" content="website">
+<meta property="og:title" content="(주)무한채용 — 출근하기">
+<meta property="og:description" content="누구나, 언제든 채용합니다. 오늘도 출근해 볼까요?">
+<meta property="og:image" content="https://company.play-run.workers.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Pretendard-subset.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:P;src:url(/fonts/Pretendard-subset.woff2) format('woff2');font-weight:100 900;font-display:swap}
+html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#8fd0ff,#e3f4ff 62%,#fff4e2)}
+#title{position:fixed;inset:0;z-index:50;font-family:P,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;pointer-events:none;transition:opacity .3s}
+#title .tt{position:absolute;left:0;right:0;top:calc(92px + env(safe-area-inset-top));text-align:center;color:#1d2b4f}
+#title .t1{font:700 17px P,sans-serif;letter-spacing:6px}
+#title .t2{font:900 56px P,sans-serif;letter-spacing:1px;margin-top:6px;text-shadow:0 4px 0 #fff}
+#title .t3{font:600 13px P,sans-serif;margin-top:10px;color:#4a5878}
+#title .bar{margin:22px auto 0;width:170px;height:12px;border-radius:8px;background:#fff;border:2.5px solid #3a2f3d;overflow:hidden}
+#title .bar i{display:block;width:4%;height:100%;background:#8fd3ff;transition:width .25s}
+</style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app"><div id="ui"></div></div>
+<div id="title"><div class="tt"><div class="t1">(주)무한채용</div><div class="t2">출근하기</div><div class="t3">누구나, 언제든 채용합니다</div><div class="bar"><i id="bar"></i></div><div id="full"></div></div></div>
+<noscript>자바스크립트를 켜야 출근할 수 있어요.</noscript>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
