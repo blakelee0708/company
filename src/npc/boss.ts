@@ -4,6 +4,7 @@ import { Actor, type Seat } from '../world/actor';
 import type { Look } from '../character/worker';
 import type { NavGrid } from '../world/nav';
 import { between } from '../shared/rand';
+import { BOSS_SPEED } from '../shared/consts';
 
 export type SupState = 'seated' | 'approach' | 'talk' | 'return' | 'escort' | 'pantry' | 'stand';
 export class Superior {
@@ -18,7 +19,7 @@ export class Superior {
     this.a.place(seat.x, seat.z, seat.ry);
     this.a.sitAt(seat);
     this.a.w.anim.sitW = 1;
-    this.a.speed = 1.3;
+    this.a.speed = BOSS_SPEED;
   }
   get rank(): string { return this.role === 'boss' ? '부장' : '과장'; }
   get free(): boolean { return this.state === 'seated'; }

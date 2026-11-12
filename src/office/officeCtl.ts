@@ -3,11 +3,14 @@ import * as THREE from 'three';
 import type { Game } from '../game';
 import type { World, CamPreset } from '../core/stage';
 import { buildOffice, OFFICE, type OfficeBuilt } from '../world/office';
+import { CUB } from '../world/kit';
+/** 사무실에서는 캐릭터를 조금 작게(책상 대비 머리가 너무 크지 않게) */
+const OFFICE_SC = 1.05;
 import { Actor, type Seat } from '../world/actor';
 import { Superior } from '../npc/boss';
 import { StaffNpc } from '../npc/staff';
 import { BOSS, MGR_F, MGR_M } from '../character/presets';
-import { DEPTS, NPC_BASE, NPC_LEAVE_SEC } from '../shared/consts';
+import { DEPTS, NPC_BASE, NPC_LEAVE_SEC, WALK_SPEED } from '../shared/consts';
 import { npcSwapStep } from '../shared/npcRule';
 import { mulberry32, pick, between, shuffle } from '../shared/rand';
 import { h, $ui, toast, wait } from '../ui/dom';
@@ -16,6 +19,7 @@ import { PcWindow } from '../ui/pc';
 import { openDialog, dialogOpen, closeDialog, type DlgChoice } from '../ui/dialog';
 import { portrait } from '../character/portrait';
 import { openBoard, LocalBoard, renderNotes, type BoardSource } from '../ui/board';
+import { openOfficeGuide } from '../ui/guide';
 import { sfx } from '../core/sound';
 import { randomLook } from '../npc/looks';
 import {
@@ -30,7 +34,7 @@ const FAST = new URLSearchParams(location.search).has('fast') ? 12 : 1;
 type Mode = 'walk' | 'sit' | 'pc' | 'busy';
 export interface PeerInfo { id: string; name: string; look: Look }
 
-const SEATED_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 54, up: 2.9, back: 3.3, ahead: 1.8, tgtY: 0.8 }, pc: { fov: 46, up: 4.6, back: 5.6, ahead: 2.2, tgtY: 0.6 } };
+const SEATED_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 54, up: 4.4, back: 3.4, ahead: 2.4, tgtY: 0.4 }, pc: { fov: 46, up: 4.6, back: 5.6, ahead: 2.2, tgtY: 0.6 } };
 const WALK_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 54, up: 8.2, back: 9.1, ahead: 5.2, tgtY: 0 }, pc: { fov: 46, up: 15, back: 11.6, ahead: 11.9, tgtY: 0 } };
 const PANTRY_CAM: { phone: CamPreset; pc: CamPreset } = { phone: { fov: 50, up: 7.6, back: 7.0, ahead: 0.3, tgtY: 0.5 }, pc: { fov: 44, up: 8.5, back: 8.5, ahead: 0.3, tgtY: 0.5 } };
 const COFFEES: Array<[string, string]> = [['아메리카노', '따뜻한 아메리카노 한 잔. 잠깐 쉬어 가요'], ['믹스커피', '달달한 믹스커피 한 잔. 당 충전 완료'], ['라떼', '부드러운 라떼 한 잔. 잠깐 쉬어 가요'], ['녹차', '따뜻한 녹차 한 잔. 마음도 차분히']];
@@ -67,6 +71,7 @@ export class OfficeCtl {
   inPantry = false;
   disposed = false;
   private pantryFocus = new THREE.Vector3();
+  private approachLeft = 0;
   private menuOpen = false;
   private labelOffs: Array<() => void> = [];
 
@@ -82,6 +87,7 @@ export class OfficeCtl {
     const mgrName = pick(['박과장', '윤과장'] as const);
     this.boss = new Superior('boss', bossName, BOSS, this.B.bossSeat, this.B.nav);
     this.mgr = new Superior('mgr', mgrName, fem ? MGR_F : MGR_M, this.B.mgrSeat, this.B.nav);
+    this.boss.a.setScale(OFFICE_SC); this.mgr.a.setScale(OFFICE_SC);
     this.boss.a.addTo(scene); this.mgr.a.addTo(scene);
     this.boss.a.tag(g.stage, bossName); this.mgr.a.tag(g.stage, mgrName);
     // NPC 사원 10명(부서마다 같은 자리: 각 기기가 같은 규칙으로 그림)
@@ -89,8 +95,8 @@ export class OfficeCtl {
     const npcSeats = shuffle([...this.B.seats.keys()], this.rnd).slice(0, NPC_BASE);
     for (const i of npcSeats) this.addStaff(this.B.seats[i]);
     // 나
-    this.me = new Actor({ sex: s.sex, suit: s.suit, tie: s.tie }, 'me', s.name).place(OFFICE.DOOR.x, OFFICE.DOOR.z - 0.6, Math.PI).addTo(scene);
-    this.board = g.net?.board ?? new LocalBoard(shuffle([...BOARD_SEED]).slice(0, 8));
+    this.me = new Actor({ sex: s.sex, suit: s.suit, tie: s.tie }, 'me', s.name, OFFICE_SC).place(OFFICE.DOOR.x, OFFICE.DOOR.z - 0.6, Math.PI).addTo(scene);
+    this.board = g.net?.board ?? new LocalBoard([...BOARD_SEED]);
     this.pc = new PcWindow(s, {
       onSubmit: (i) => this.onSubmit(i),
       onDone: (i) => this.onDone(i),
@@ -122,6 +128,7 @@ export class OfficeCtl {
 
   private addStaff(seat: Seat, look?: Look): StaffNpc {
     const n = new StaffNpc(seat, look ?? randomLook(this.rnd), this.g.stage, this.B.nav, this.B.pantry, 1);
+    n.a.setScale(OFFICE_SC);
     n.a.addTo(this.B.scene);
     this.staff.push(n);
     this.npcSeen++;
@@ -138,18 +145,18 @@ export class OfficeCtl {
     this.g.hud.title(`${dept.name} · ${dept.floor}층`, '');
     this.tickHud();
     this.me.walkStraight([{ x: 0, z: OFFICE.DOOR.z - 1.8 }]);
-    await wait(700);
-    // 부장이 고개를 들어 인사
-    this.boss.a.w.anim.lookYaw = 0;
-    const l = pickLine(GREET, this.g.s.usedLines, { who: 'boss', hasTodo: false });
-    if (l) { this.boss.a.say(st, fillLine(l.text, this.g.s.name, null), 3.6); this.boss.a.w.play('nod'); }
-    await wait(800);
+    await wait(1500);
     const to = { pos: new THREE.Vector3(), tgt: new THREE.Vector3(), fov: 54 };
     st.clearFixed();
     await st.tweenTo(() => { st.followView(to); return to; }, 1.0);
+    // 처음 한 번: 조작법·할 일 안내(투명 레이어) → [알겠어요]
+    await openOfficeGuide();
+    if (this.disposed) return;
     this.mode = 'walk';
     this.dockKey = '';
     toast('하늘색 동그라미가 빈자리예요', 3500);
+    // 부장이 걸어와서 인사
+    this.queue(() => this.talkLine(this.boss, GREET), true);
   }
 
   /* ---------------- 매 프레임 ---------------- */
@@ -180,8 +187,13 @@ export class OfficeCtl {
       if (this.nudgeT <= 0) { this.nudgeT = between(120, 240) / FAST; this.queueNudge(); }
       if (!this.comfortDone && performance.now() - this.sitSince > (20 * 60 * 1000) / FAST) { this.comfortDone = true; this.queue(() => this.talkLine(pick([this.boss, this.mgr]), COMFORT)); }
       const hr = new Date().getHours();
-      if (!this.timeLineDone.lunch && hr === 12 && performance.now() - this.sitSince > 30000 / FAST) { this.timeLineDone.lunch = true; this.queue(() => this.talk(this.boss, LUNCH)); }
-      if (!this.timeLineDone.evening && hr >= 18 && performance.now() - this.sitSince > 60000 / FAST) { this.timeLineDone.evening = true; this.queue(() => this.talk(this.boss, EVENING)); }
+      if (!this.timeLineDone.lunch && hr === 12 && performance.now() - this.sitSince > 30000 / FAST) { this.timeLineDone.lunch = true; this.queue(() => this.approach(this.boss, () => this.talk(this.boss, LUNCH))); }
+      if (!this.timeLineDone.evening && hr >= 18 && performance.now() - this.sitSince > 60000 / FAST) { this.timeLineDone.evening = true; this.queue(() => this.approach(this.boss, () => this.talk(this.boss, EVENING))); }
+    }
+    if (this.approachLeft > 0) {
+      this.approachLeft -= dt;
+      const v = this.visiting;
+      if (this.approachLeft <= 0 && v && v.state === 'approach') { this.visiting = null; v.goHome(); }
     }
     if (!this.visiting && this.visitQ.length && !dialogOpen()) this.visitQ.shift()!();
     this.npcSwap(dt);
@@ -198,7 +210,9 @@ export class OfficeCtl {
     const npc = this.staff.filter((n) => n.state !== 'gone').length;
     const dept = DEPTS[this.g.s.dept];
     if (this.inPantry) this.g.hud.title('탕비실', `잠깐 쉬어 가요 · ${this.g.clock()}`);
-    else this.g.hud.title(`${dept.name} · ${dept.floor}층`, `지금 근무 중 ${humans + npc + 2}명 · ${this.g.clock()}`);
+    else this.g.hud.title(`${dept.name} · ${dept.floor}층`, `근무 시간 ${this.g.clock()}`);
+    // 부서에 함께 있는 사람 = 실제 사람 + NPC 사원 + 부장·과장
+    this.g.hud.count(humans + npc + 2);
   }
   /** 같이 일한 사람 = 같은 부서 실제 사람 + NPC 사원(오늘 본 사람 모두) + 부장·과장 */
   coworkers(): number { return this.g.s.coworkers.size + Math.max(this.npcSeen, this.staff.length) + 2; }
@@ -237,12 +251,12 @@ export class OfficeCtl {
   private onKey(d: THREE.Vector2, dt: number): void {
     if (this.mode !== 'walk' || dialogOpen()) return;
     this.me.stopWalk();
-    const nx = this.me.pos.x + d.x * 1.4 * dt, nz = this.me.pos.z + d.y * 1.4 * dt;
+    const nx = this.me.pos.x + d.x * WALK_SPEED * dt, nz = this.me.pos.z + d.y * WALK_SPEED * dt;
     if (this.B.nav.free(nx, nz)) { this.me.pos.x = nx; this.me.pos.z = nz; }
     else if (this.B.nav.free(nx, this.me.pos.z)) this.me.pos.x = nx;
     else if (this.B.nav.free(this.me.pos.x, nz)) this.me.pos.z = nz;
     this.me.faceYaw(Math.atan2(d.x, d.y));
-    this.me.w.setPose('walk'); this.me.w.anim.speed = 1.2;
+    this.me.w.setPose('walk'); this.me.w.anim.speed = 1.8;
   }
   key(k: string, e: KeyboardEvent): void {
     if (k === 'e') { e.preventDefault(); if (this.mode === 'walk') { const s = this.nearSeat(); if (s) this.sit(s); } else if (this.mode === 'sit' || this.mode === 'pc') this.standUp(); }
@@ -388,7 +402,7 @@ export class OfficeCtl {
     const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.056, 0.05, 18), new THREE.MeshStandardMaterial({ color: 0xc98b55, roughness: 0.6 }));
     cup.position.y = 0.07; sl.position.y = 0.06; c.add(cup, sl);
     const fx = Math.sin(seat.ry), fz = Math.cos(seat.ry), rx = Math.cos(seat.ry), rz = -Math.sin(seat.ry);
-    c.position.set(seat.x + fx * 0.9 + rx * 0.75, 0.765, seat.z + fz * 0.9 + rz * 0.75);
+    c.position.set(seat.x + fx * 0.9 + rx * 0.75, CUB.H + 0.045, seat.z + fz * 0.9 + rz * 0.75);
     this.B.scene.add(c);
     this.cupOnDesk = c;
   }
@@ -445,14 +459,14 @@ export class OfficeCtl {
   /** 4개 다 완료: 부장이 일어나 박수 */
   private allDone(): void {
     const b = this.boss;
-    this.visiting = b;
-    if (b.a.sitting) b.a.standUp();
-    b.state = 'stand';
-    b.a.faceTo(this.me.pos.x, this.me.pos.z);
-    b.a.w.play('clap', 2.4); sfx.clap();
     this.g.s.praise++;
     this.g.s.usedLines.add(PRAISE_ALL.id);
-    setTimeout(() => this.talk(b, PRAISE_ALL, undefined, true), 900);
+    // 걸어와서 박수 치고 칭찬
+    this.approach(b, () => {
+      b.a.faceTo(this.me.pos.x, this.me.pos.z);
+      b.a.w.play('clap', 2.4); sfx.clap();
+      setTimeout(() => this.talk(b, PRAISE_ALL), 900);
+    });
   }
 
   /* ---------------- 상사 말 걸기 ---------------- */
@@ -478,7 +492,11 @@ export class OfficeCtl {
     this.visiting = sup;
     if (this.pc.isOpen) this.pc.notify(`${sup.name}님이 다가와요`);
     if (this.me.dist(sup.a.pos.x, sup.a.pos.z) < 1.8 && !sup.a.sitting) { sup.a.faceTo(this.me.pos.x, this.me.pos.z); then(); return; }
-    sup.visit(this.me, then);
+    // 내가 걷고 있으면 불러 세움
+    if (this.me.walking && this.mode === 'walk') sup.a.say(this.g.stage, `${this.g.s.name.split('#')[0]}님, 잠깐만요~`, 2.2);
+    // 게임 시간으로 30초 안에 못 오면 다음에(내가 계속 멀어질 때)
+    this.approachLeft = 30;
+    sup.visit(this.me, () => { this.approachLeft = 0; then(); });
   }
   /** 대화창 열기 */
   talk(sup: Superior, l: Line, todoIdx?: number, stay = false): void {
@@ -509,11 +527,7 @@ export class OfficeCtl {
   private standupTalk(sup: Superior): void {
     const l = pickLine(STANDUP, this.g.s.usedLines, { who: sup.role, hasTodo: false });
     if (!l) { this.visiting = null; return; }
-    this.visiting = sup;
-    if (sup.a.sitting) sup.a.standUp();
-    sup.state = 'stand';
-    sup.a.faceTo(this.me.pos.x, this.me.pos.z);
-    this.talk(sup, l);
+    this.approach(sup, () => this.talk(sup, l));
   }
   /** 혼자 탕비실로 걸어감 */
   goPantryAlone(): void {
@@ -683,6 +697,7 @@ export class OfficeCtl {
       if (empty.length) {
         const seat = empty[Math.floor(this.rnd() * empty.length)];
         const n = new StaffNpc(seat, randomLook(), this.g.stage, this.B.nav, this.B.pantry);
+        n.a.setScale(OFFICE_SC);
         n.a.addTo(this.B.scene);
         this.occ[seat.idx] = 'npc';
         n.enter(seat);
@@ -696,7 +711,7 @@ export class OfficeCtl {
   /* ---------------- 같이 출근하는 사람들 ---------------- */
   addPeer(p: PeerPub): void {
     if (this.peers.has(p.id) || this.disposed) return;
-    const a = new Actor({ sex: p.sex, suit: p.suit as SuitKey, tie: p.tie }, 'peer', p.name);
+    const a = new Actor({ sex: p.sex, suit: p.suit as SuitKey, tie: p.tie }, 'peer', p.name, OFFICE_SC);
     a.id = p.id;
     a.place(p.x, p.z, p.y).addTo(this.B.scene);
     a.net = { x: p.x, z: p.z, yaw: p.y };

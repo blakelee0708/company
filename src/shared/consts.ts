@@ -33,3 +33,7 @@ export const TODO_MAX = 4;
 export const SURNAMES = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '한', '오', '서', '신', '권', '황', '안', '송', '류', '홍'] as const;
 export const SUIT_KEYS = ['navy', 'charcoal', 'gray', 'black', 'beige', 'pink'] as const;
 export type SuitKey = (typeof SUIT_KEYS)[number];
+/** 걷는 속도(m/s). 장면이 넓어서 빠른 걸음으로 */
+export const WALK_SPEED = 2.6;
+export const NPC_SPEED = 1.9;
+export const BOSS_SPEED = 2.1;

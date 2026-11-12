@@ -26,6 +26,12 @@ export default {
       }
       return json({ full: true });
     }
+    if (url.pathname === '/api/count') {
+      // 건물에 접속한 실제 사람 수(이름 등은 보내지 않음)
+      let total = 0;
+      for (let b = 0; b < MAX_BUILDINGS; b++) { const r = await env.BUILDING.get(env.BUILDING.idFromName('b' + b)).fetch(`https://b/total?b=${b}`); total += ((await r.json()) as { total: number }).total; }
+      return json({ total });
+    }
     if (url.pathname === '/ws/dept') {
       if (req.headers.get('Upgrade') !== 'websocket') return new Response('websocket only', { status: 426 });
       const b = Math.max(0, Math.min(MAX_BUILDINGS - 1, Number(url.searchParams.get('b')) | 0));

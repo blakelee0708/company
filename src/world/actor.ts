@@ -5,6 +5,7 @@ import { SC } from '../character/presets';
 import type { NavGrid, Pt } from './nav';
 import type { Stage } from '../core/stage';
 import { h } from '../ui/dom';
+import { WALK_SPEED } from '../shared/consts';
 
 export interface Seat { idx: number; x: number; z: number; ry: number; chair: THREE.Group | null; team: number; kind: 'staff' | 'boss' | 'mgr' }
 export type Kind = 'me' | 'peer' | 'boss' | 'mgr' | 'staff' | 'extra';
@@ -15,7 +16,7 @@ export class Actor {
   id: string;
   name: string;
   kind: Kind;
-  speed = 1.4;
+  speed = WALK_SPEED;
   path: Pt[] = [];
   private onArrive: (() => void) | null = null;
   seat: Seat | null = null;
@@ -40,6 +41,7 @@ export class Actor {
     this.id = kind + ':' + uid++;
   }
   get pos(): THREE.Vector3 { return this.w.root.position; }
+  setScale(s: number): this { this.scale = s; this.w.root.scale.setScalar(s); return this; }
   place(x: number, z: number, yaw = this.yaw): this { this.pos.set(x, 0, z); this.yaw = this.yawT = yaw; this.w.root.rotation.y = yaw; return this; }
   addTo(scene: THREE.Object3D): this { scene.add(this.w.root); return this; }
   /** 머리 위 점 */
@@ -98,17 +100,17 @@ export class Actor {
         this.pos.x += (dx / d) * step; this.pos.z += (dz / d) * step;
         this.yawT = Math.atan2(dx, dz);
       }
-      this.w.anim.speed = this.speed / this.scale;
+      this.w.anim.speed = Math.min(2.2, (this.speed / this.scale) * 0.85);
     } else if (this.net) {
       // 다른 사람: 받은 위치로 부드럽게
       const dx = this.net.x - this.pos.x, dz = this.net.z - this.pos.z, d = Math.hypot(dx, dz);
       if (d > 4) { this.pos.x = this.net.x; this.pos.z = this.net.z; }
       else if (d > 0.04 && !this.sitting) {
-        const step = Math.min(d, Math.max(1.4, d * 3) * dt);
+        const step = Math.min(d, Math.max(WALK_SPEED, d * 3) * dt);
         this.pos.x += (dx / d) * step; this.pos.z += (dz / d) * step;
         this.yawT = Math.atan2(dx, dz);
         if (this.w.anim.base !== 'walk') this.w.setPose('walk');
-        this.w.anim.speed = 1.4 / this.scale;
+        this.w.anim.speed = Math.min(2.2, (WALK_SPEED / this.scale) * 0.85);
       } else if (!this.sitting) {
         if (this.w.anim.base === 'walk') this.w.setPose('stand');
         this.yawT = this.net.yaw;

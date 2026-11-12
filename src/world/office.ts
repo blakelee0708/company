@@ -90,14 +90,16 @@ export function buildOffice(dept: number, floorNo: number): OfficeBuilt {
     return { x0: Math.min(...pts.map((p) => p[0])), x1: Math.max(...pts.map((p) => p[0])), z0: Math.min(...pts.map((p) => p[1])), z1: Math.max(...pts.map((p) => p[1])) };
   };
   let mgrSeat: Seat | null = null;
+  const DO = CUB.D / 2 + 0.1; // 책상 가운데가 팀 가운데에서 떨어진 거리
+  const RZ0 = -(CUB.D / 2 + 0.1), RZ1 = CUB.D / 2 + 0.02; // 칸막이 포함 자리 깊이(로컬)
   teams.forEach(([zc, n, name, team], t) => {
     const far = n === 7 ? X4 : X4.slice(0, 3), near = X4.slice(0, 3);
-    far.forEach((x, i) => { const c = cubicle(scene, x, zc - 0.7, -1, { side: i > 0, memo: (i + t) % 2 === 0, plant: i === 1, files: i === 2 }); partitions.push(c.partition); seats.push({ idx: seats.length, x, z: zc - 0.7 - CUB.SEAT, ry: 0, chair: c.chair, team, kind: 'staff' }); blocks.push([rectOf(x, zc - 0.7, Math.PI, -1.5, 1.5, -0.7, 0.62), 0.15]); });
-    near.forEach((x, i) => { const c = cubicle(scene, x, zc + 0.7, +1, { side: i > 0, memo: (i + t) % 2 === 1, mugC: 0xffe08a, files: i === 0 }); partitions.push(c.partition); seats.push({ idx: seats.length, x, z: zc + 0.7 + CUB.SEAT, ry: Math.PI, chair: c.chair, team, kind: 'staff' }); blocks.push([rectOf(x, zc + 0.7, 0, -1.5, 1.5, -0.7, 0.62), 0.15]); });
+    far.forEach((x, i) => { const c = cubicle(scene, x, zc - DO, -1, { side: i > 0, memo: (i + t) % 2 === 0, plant: i === 1, files: i === 2 }); partitions.push(c.partition); seats.push({ idx: seats.length, x, z: zc - DO - CUB.SEAT, ry: 0, chair: c.chair, team, kind: 'staff' }); blocks.push([rectOf(x, zc - DO, Math.PI, -1.5, 1.5, RZ0, RZ1), 0.15]); });
+    near.forEach((x, i) => { const c = cubicle(scene, x, zc + DO, +1, { side: i > 0, memo: (i + t) % 2 === 1, mugC: 0xffe08a, files: i === 0 }); partitions.push(c.partition); seats.push({ idx: seats.length, x, z: zc + DO + CUB.SEAT, ry: Math.PI, chair: c.chair, team, kind: 'staff' }); blocks.push([rectOf(x, zc + DO, 0, -1.5, 1.5, RZ0, RZ1), 0.15]); });
     if (name === '2팀') {
       const c = cubicle(scene, 6.95, zc, 0, { ang: Math.PI / 2, files: true, memo: true, plant: true }); partitions.push(c.partition);
       mgrSeat = { idx: -2, x: 6.95 + CUB.SEAT, z: zc, ry: -Math.PI / 2, chair: c.chair, team: 2, kind: 'mgr' };
-      blocks.push([rectOf(6.95, zc, Math.PI / 2, -1.5, 1.5, -0.7, 0.62), 0.15]);
+      blocks.push([rectOf(6.95, zc, Math.PI / 2, -1.5, 1.5, RZ0, RZ1), 0.15]);
       tops.mgr = new THREE.Vector3(6.95 + CUB.SEAT, 2.0, zc);
       plant(scene, 4.5, zc + 1.2, 1.1); blocks.push([{ x0: 4.2, x1: 4.8, z0: zc + 0.9, z1: zc + 1.5 }, 0.1]);
     } else { printer(scene, 4.5, zc + 0.9); blocks.push([{ x0: 4.0, x1: 5.0, z0: zc + 0.55, z1: zc + 1.25 }, 0.1]); }
@@ -138,7 +140,7 @@ export function buildOffice(dept: number, floorNo: number): OfficeBuilt {
   const rings = seats.map((s) => ring(scene, s.x, s.z, 0.42));
   for (const p of partitions) occluders.push(p);
   instancify(scene);
-  const monitorAt = (s: Seat): THREE.Vector3 => new THREE.Vector3(s.x + Math.sin(s.ry) * 1.35, 1.15, s.z + Math.cos(s.ry) * 1.35);
+  const monitorAt = (s: Seat): THREE.Vector3 => new THREE.Vector3(s.x + Math.sin(s.ry) * (CUB.SEAT + 0.42 + 0.0), 1.25, s.z + Math.cos(s.ry) * (CUB.SEAT + 0.42));
   // 자리 칸은 꼭 열어 둠
   for (const s of [...seats, bossSeat, mgrSeat!]) nav.open({ x0: s.x - 0.25, x1: s.x + 0.25, z0: s.z - 0.25, z1: s.z + 0.25 });
   return { scene, seats, bossSeat, mgrSeat: mgrSeat!, nav, occluders, rings, tops, monitorAt, pantry, rightWall };

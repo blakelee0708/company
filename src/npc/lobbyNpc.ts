@@ -14,7 +14,7 @@ export class LobbyCrowd {
   constructor(scene: THREE.Scene, private nav: NavGrid, private lanes: Lane[]) {
     const add = (beh: Beh, x: number, z: number, yaw = Math.PI): N => {
       const a = new Actor(randomLook(), 'extra').place(x, z, yaw).addTo(scene);
-      a.speed = between(1.1, 1.5);
+      a.speed = between(1.5, 2.0);
       const n: N = { a, beh, t: between(0, 3), phase: 0 };
       this.list.push(n);
       return n;

@@ -16,9 +16,8 @@ export class BuildingRoom extends DurableObject<Env> {
   private b = 0;
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
-    // NPC가 미리 붙여 둔 메모 8개
-    const seed = [...BOARD_SEED].sort(() => Math.random() - 0.5).slice(0, 8);
-    this.notes = seed.map((t, i) => ({ id: 'n' + i, text: t, by: 'npc', reports: new Set(), hidden: false }));
+    // 처음부터 붙어 있는 메모 두 개
+    this.notes = BOARD_SEED.map((t, i) => ({ id: 'n' + i, text: t, by: 'npc', reports: new Set(), hidden: false }));
   }
   private visible(): NotePub[] { return this.notes.filter((n) => !n.hidden).slice(-BOARD_MAX).map((n) => ({ id: n.id, text: n.text })); }
   private async push(msg: unknown): Promise<void> {
@@ -42,6 +41,7 @@ export class BuildingRoom extends DurableObject<Env> {
       return Response.json({ ok: true });
     }
     if (url.pathname === '/board') return Response.json(this.visible());
+    if (url.pathname === '/total') return Response.json({ total: this.counts.reduce((a, b) => a + b, 0) });
     if (url.pathname === '/note') {
       const { uid, text } = (await req.json()) as { uid: string; text: string };
       const c = this.posts.get(uid) ?? 0;

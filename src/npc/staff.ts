@@ -6,6 +6,7 @@ import type { Look } from '../character/worker';
 import type { NavGrid } from '../world/nav';
 import type { Stage } from '../core/stage';
 import { between, pick } from '../shared/rand';
+import { NPC_SPEED } from '../shared/consts';
 import { STAFF_OUT, STAFF_IN } from './lines';
 import { OFFICE } from '../world/office';
 import type { PantryBuilt } from '../office/types';
@@ -94,7 +95,7 @@ export class StaffNpc {
       if (a.dist(tx, tz) > 0.5 && (!a.walking || this.t <= 0)) { this.t = 0.4; a.goTo(this.nav, tx, tz); }
       if (!f.walking && a.dist(tx, tz) < 0.6 && !a.walking) a.faceTo(f.pos.x + Math.sin(f.yaw) * 2, f.pos.z + Math.cos(f.yaw) * 2);
     }
-    a.speed = 1.3 * this.speedK;
+    a.speed = NPC_SPEED * this.speedK;
     a.update(dt);
   }
   dispose(): void { this.a.dispose(); }

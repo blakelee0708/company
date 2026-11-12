@@ -31,6 +31,9 @@ export class Stage {
   world: World | null = null;
   W = 1; H = 1;
   pc = false;
+  /** 화면 속 그림을 아래로 밀기(px). 캐릭터 선택 화면에서 빈 칸 가운데에 맞출 때 */
+  viewShift = 0;
+  private lastShift = 0;
   /** 사용자가 돌린 양 */
   yawOff = 0; pitchOff = 0; zoom = 1;
   /** 장면 기본 방향(부드럽게 바뀜) */
@@ -104,6 +107,7 @@ export class Stage {
     this.snap = true;
     this.override = null;
     this.tween = null;
+    this.viewShift = 0;
   }
   setBaseYaw(y: number): void { this.targetBaseYaw = y; }
   resetView(): void { this.yawOff = 0; this.pitchOff = 0; this.zoom = 1; }
@@ -170,6 +174,10 @@ export class Stage {
       this.camera.position.copy(this.camPos);
       this.camera.lookAt(this.camTgt);
       if (Math.abs(this.camera.fov - v.fov) > 0.01) { this.camera.fov = v.fov; this.camera.updateProjectionMatrix(); }
+    }
+    if (this.viewShift !== this.lastShift || (this.viewShift && this.camera.view?.fullHeight !== this.H)) {
+      this.lastShift = this.viewShift;
+      if (this.viewShift) this.camera.setViewOffset(this.W, this.H, 0, -this.viewShift, this.W, this.H); else this.camera.clearViewOffset();
     }
     this.camera.updateMatrixWorld();
     if (this.lowPower && (this.skip = (this.skip + 1) % 3) !== 0) { this.updateLabels(); return; }

@@ -11,7 +11,7 @@ import { toast } from '../ui/dom';
 import { crisisHelp } from '../ui/board';
 
 class NetBoard implements BoardSource {
-  list: Note[] = BOARD_SEED.slice(0, 8).map((t, i) => ({ id: 'seed' + i, text: t }));
+  list: Note[] = BOARD_SEED.map((t, i) => ({ id: 'seed' + i, text: t }));
   private subs = new Set<() => void>();
   mine = 0;
   constructor(private net: Net) {}

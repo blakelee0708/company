@@ -12,7 +12,7 @@ import { Worker } from './character/worker';
 import { SUITS } from './character/parts';
 import { LobbyCrowd } from './npc/lobbyNpc';
 import { ELEV_CALL, ELEV_IN } from './npc/lines';
-import { DEPTS, SUIT_KEYS, type SuitKey } from './shared/consts';
+import { DEPTS, SUIT_KEYS, WALK_SPEED, type SuitKey } from './shared/consts';
 import { fmtClock } from './shared/pay';
 import { sfx, sound } from './core/sound';
 import { portrait } from './character/portrait';
@@ -116,19 +116,36 @@ export class Game {
       },
     };
     this.stage.setWorld(world);
-    this.stage.setFixed(sel.cam.pos, sel.cam.tgt, sel.cam.fov);
+    const camPos = new THREE.Vector3(0, 1.75, 11), camTgt = new THREE.Vector3(0, 0.82, 0);
+    this.stage.setFixed(camPos, camTgt, sel.cam.fov);
     const pills = [0, 1].map((i) => h('button', { class: 'sel-pill', onclick: () => choose(i) }, i ? '여사원' : '남사원'));
+    const area = h('div', { class: 'sel-stage' });
     const dots = h('div', { class: 'sel-dots' });
     const drawDots = (): void => { dots.replaceChildren(...SUIT_KEYS.map((k) => h('button', { class: 'sel-dot' + (k === this.s.suit ? ' on' : ''), style: `background:#${SUITS[k].toString(16).padStart(6, '0')}`, 'aria-label': k, onclick: () => { this.s.suit = k as SuitKey; for (const w of ws) w.setSuit(k); drawDots(); } }))); };
     drawDots();
     const go = bigBtn('출근하기', () => void start(), 'on');
     go.disabled = true;
+    // 위에서 아래로 차례로 쌓음: 제목 → 캐릭터 칸 → 남사원·여사원 → 정장 색 → 출근하기(어떤 화면 높이에서도 가려지지 않게)
     const ui = h('div', { class: 'sel' },
       h('div', { class: 'sel-top' }, h('div', { class: 'sel-k' }, '(주)무한채용 신입사원 등록'), h('div', { class: 'sel-q' }, '누구로 출근할까요?')),
+      area,
       h('div', { class: 'sel-pills' }, ...pills),
       h('div', { class: 'card sel-card' }, h('div', { class: 'sel-l' }, '정장 색'), dots, h('div', { class: 'sel-name' }, '오늘의 이름 ', h('b', {}, this.s.name), ' · 매일 새로 정해져요')),
-      h('div', { class: 'dock' }, go));
+      h('div', { class: 'sel-go' }, go));
     $ui().append(ui);
+    // 캐릭터를 빈 칸(area) 가운데에, 칸 높이에 맞춰 그림
+    const fit = (): void => {
+      const r = area.getBoundingClientRect(), W = this.stage.W, H = this.stage.H;
+      if (r.height < 40) return;
+      const d = camPos.distanceTo(camTgt);
+      const tV = (2.1 / 2 / d / 0.86) * (H / r.height); // 높이 2.1이 칸의 86%
+      const Wa = Math.min(W, 520), tHx = (3.6 / 2 / d / 0.94) * (W / Wa); // 폭 3.6이 가운데 520px의 94%
+      const fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.max(tV, tHx * (H / W))));
+      this.stage.setFixed(camPos, camTgt, Math.min(80, fov));
+      // 발판이 이름 버튼 바로 위에 오게(칸 아래쪽에 붙임)
+      const pad = this.stage.project(new THREE.Vector3(0, 0, 0.66));
+      this.stage.viewShift += r.bottom - 4 - pad.y;
+    };
     const choose = (i: number): void => {
       if (i < 0) return;
       chosen = i;
@@ -141,9 +158,10 @@ export class Game {
     };
     // 라벨 위치: 캐릭터 발밑
     const place = (): void => {
-      ws.forEach((_w, i) => { const p = this.stage.project(new THREE.Vector3(base[i].x, 0.1, base[i].z + 0.62)); pills[i].style.left = p.x + 'px'; pills[i].style.top = p.y + 'px'; });
+      fit();
+      ws.forEach((_w, i) => { const p = this.stage.project(new THREE.Vector3(base[i].x, 0.1, base[i].z)); pills[i].style.left = p.x + 'px'; });
     };
-    const ro = (): void => { if (ui.isConnected) { place(); requestAnimationFrame(ro); } };
+    const ro = (): void => { if (ui.isConnected) { place(); requestAnimationFrame(ro); } else this.stage.viewShift = 0; };
     requestAnimationFrame(ro);
     const start = async (): Promise<void> => {
       if (chosen < 0) return;
@@ -175,7 +193,7 @@ export class Game {
         const p = ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3());
         if (p) me.goTo(L.nav, p.x, p.z);
       },
-      onKey: (d, dt) => { if (busy) return; me.stopWalk(); const nx = me.pos.x + d.x * 1.4 * dt, nz = me.pos.z + d.y * 1.4 * dt; if (L.nav.free(nx, nz)) { me.pos.x = nx; me.pos.z = nz; me.faceYaw(Math.atan2(d.x, d.y)); me.w.setPose('walk'); me.w.anim.speed = 1.2; } },
+      onKey: (d, dt) => { if (busy) return; me.stopWalk(); const nx = me.pos.x + d.x * WALK_SPEED * dt, nz = me.pos.z + d.y * WALK_SPEED * dt; if (L.nav.free(nx, nz)) { me.pos.x = nx; me.pos.z = nz; me.faceYaw(Math.atan2(d.x, d.y)); me.w.setPose('walk'); me.w.anim.speed = 1.8; } },
     };
     let keyIdle = 0;
     const baseUpd = world.update;
@@ -186,6 +204,11 @@ export class Game {
     this.hud.title('1층 로비', this.stage.pc ? '사원증을 찍고 들어가요 · 클릭한 곳으로 걸어가요' : '사원증을 찍고 들어가요');
     this.chips(false);
     this.hud.setDock();
+    // 위에: 지금 회사에 함께 있는 사람(로비 NPC 포함)
+    let bldg = 0;
+    const showCount = (): void => this.hud.count(crowd.list.length + 1 + bldg, '지금 회사에 함께');
+    showCount();
+    void fetch('/api/count', { cache: 'no-store' }).then((r) => (r.headers.get('content-type') || '').includes('json') ? r.json() : null).then((j: { total?: number } | null) => { if (j?.total) { bldg = j.total; if (this.inLobby) showCount(); } }).catch(() => undefined);
     const tapCard = async (): Promise<void> => {
       if (carded || busy) return;
       busy = true;

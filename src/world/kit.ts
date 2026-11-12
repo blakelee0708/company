@@ -143,17 +143,18 @@ export function monitor(parent: THREE.Object3D, x: number, y: number, z: number,
 }
 
 export const PANEL = 0x8f99c6, FRAME = 0xd9dce2, WOOD = 0xdcb47c;
-export const CUB = { W: 3.0, D: 1.2, SEAT: 1.05 };
+/** 자리 폭 3.0, 책상 2.8 × 1.4(높이 0.8) — 큰 머리에 맞춰 시안보다 조금 더 크게(운영자 요청) */
+export const CUB = { W: 3.0, D: 1.4, H: 0.8, SEAT: 1.15 };
 export interface CubOpts { ang?: number; side?: boolean; memo?: boolean; plant?: boolean; files?: boolean; mug?: boolean; mugC?: number }
 /** 칸막이 자리 하나(넓은 개인 자리). 칸막이 조각은 자리마다 하나로 합쳐서(반투명 처리용) 둔다. */
 export function cubicle(scene: THREE.Object3D, x: number, z: number, facing: number, o: CubOpts = {}): { g: THREE.Group; chair: THREE.Group; partition: THREE.Mesh } {
   const ang = o.ang ?? (facing > 0 ? 0 : Math.PI);
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ang; scene.add(g);
-  const W = 2.8, D = 1.2, hw = CUB.W / 2, pz = -D / 2 - 0.05;
-  box(g, W, 0.045, D, WOOD, 0, 0.72, 0, 0.02, { rough: 0.55 });
-  box(g, 0.05, 0.72, D - 0.1, FRAME, -W / 2 + 0.03, 0, 0, 0.01);
-  box(g, 0.5, 0.64, D - 0.15, WOOD, W / 2 - 0.3, 0, -0.02, 0.02, { rough: 0.6 });
-  for (const yy of [0.15, 0.34, 0.53]) box(g, 0.46, 0.008, 0.01, 0xa88456, W / 2 - 0.3, yy, (D - 0.15) / 2 - 0.02, 0.003);
+  const W = 2.8, D = CUB.D, DH = CUB.H, TOP = DH + 0.045, hw = CUB.W / 2, pz = -D / 2 - 0.05;
+  box(g, W, 0.045, D, WOOD, 0, DH, 0, 0.02, { rough: 0.55 });
+  box(g, 0.05, DH, D - 0.1, FRAME, -W / 2 + 0.03, 0, 0, 0.01);
+  box(g, 0.5, DH - 0.08, D - 0.15, WOOD, W / 2 - 0.3, 0, -0.02, 0.02, { rough: 0.6 });
+  for (const yy of [0.17, 0.38, 0.6]) box(g, 0.46, 0.008, 0.01, 0xa88456, W / 2 - 0.3, yy, (D - 0.15) / 2 - 0.02, 0.003);
   // 칸막이(높이 1.4): 조각을 모아 하나로
   const ph = 1.4;
   const pg = new THREE.Group(); g.add(pg);
@@ -162,13 +163,13 @@ export function cubicle(scene: THREE.Object3D, x: number, z: number, facing: num
   if (o.side !== false) { box(pg, 0.07, ph, D + 0.2, PANEL, -hw, 0, 0.05, 0.015, { rough: 0.95 }); box(pg, 0.1, 0.04, D + 0.24, FRAME, -hw, ph, 0.05, 0.018); box(pg, 0.1, ph + 0.04, 0.05, FRAME, -hw, 0, 0.05 + (D + 0.2) / 2, 0.014); }
   const partition = mergeColored(pg);
   g.remove(pg); g.add(partition);
-  monitor(g, -0.36, 0.765, -0.3, 0.14, 0.66); monitor(g, 0.36, 0.765, -0.3, -0.14, 0.66);
-  box(g, 0.5, 0.02, 0.16, 0xf2f3f5, 0, 0.765, 0.2, 0.01); box(g, 0.08, 0.028, 0.11, 0xf2f3f5, 0.42, 0.765, 0.22, 0.02);
-  box(g, 0.3, 0.015, 0.22, 0xffffff, -0.85, 0.765, 0.18, 0.005);
-  if (o.mug !== false) { const m = new THREE.Mesh(cachedGeo('mug', () => new THREE.CylinderGeometry(0.05, 0.045, 0.11, 18)), mat(o.mugC ?? 0xffffff, 0.5)); m.position.set(-1.15, 0.82, 0.1); m.castShadow = true; m.userData.inst = true; g.add(m); }
+  monitor(g, -0.38, TOP, -0.42, 0.14, 0.7); monitor(g, 0.38, TOP, -0.42, -0.14, 0.7);
+  box(g, 0.5, 0.02, 0.16, 0xf2f3f5, 0, TOP, 0.25, 0.01); box(g, 0.08, 0.028, 0.11, 0xf2f3f5, 0.42, TOP, 0.27, 0.02);
+  box(g, 0.3, 0.015, 0.22, 0xffffff, -0.85, TOP, 0.22, 0.005);
+  if (o.mug !== false) { const m = new THREE.Mesh(cachedGeo('mug', () => new THREE.CylinderGeometry(0.05, 0.045, 0.11, 18)), mat(o.mugC ?? 0xffffff, 0.5)); m.position.set(-1.15, TOP + 0.055, 0.12); m.castShadow = true; m.userData.inst = true; g.add(m); }
   if (o.memo) { const n = plane(g, 0.14, 0.14, 0xfff59a, -1.0, 1.1, pz + 0.04); n.rotation.z = 0.08; const n2 = plane(g, 0.14, 0.14, 0xffd1dc, -0.8, 1.0, pz + 0.04); n2.rotation.z = -0.1; const n3 = plane(g, 0.14, 0.14, 0xc9f2d4, 1.0, 1.15, pz + 0.04); n3.rotation.z = 0.05; }
-  if (o.plant) { const p = new THREE.Mesh(cachedGeo('minipot', () => new THREE.CylinderGeometry(0.06, 0.05, 0.1, 14)), mat(0xffffff, 0.5)); p.position.set(-1.2, 0.815, -0.35); p.userData.inst = true; g.add(p); const b = new THREE.Mesh(cachedGeo('minileaf', () => new THREE.SphereGeometry(0.1, 16, 12)), mat(0x5fb86e, 0.8)); b.position.set(-1.2, 0.94, -0.35); b.userData.inst = true; g.add(b); }
-  if (o.files) for (let i = 0; i < 4; i++) box(g, 0.06, 0.26, 0.22, [0x3d8bd9, 0x3aa76d, 0xe5484d, 0xf0b63c][i], 0.95 + i * 0.07, 0.765, -0.38, 0.01);
+  if (o.plant) { const p = new THREE.Mesh(cachedGeo('minipot', () => new THREE.CylinderGeometry(0.06, 0.05, 0.1, 14)), mat(0xffffff, 0.5)); p.position.set(-1.2, TOP + 0.05, -0.45); p.userData.inst = true; g.add(p); const b = new THREE.Mesh(cachedGeo('minileaf', () => new THREE.SphereGeometry(0.1, 16, 12)), mat(0x5fb86e, 0.8)); b.position.set(-1.2, TOP + 0.175, -0.45); b.userData.inst = true; g.add(b); }
+  if (o.files) for (let i = 0; i < 4; i++) box(g, 0.06, 0.26, 0.22, [0x3d8bd9, 0x3aa76d, 0xe5484d, 0xf0b63c][i], 0.95 + i * 0.07, TOP, -0.5, 0.01);
   const ch = chair(scene, x + Math.sin(ang) * CUB.SEAT, z + Math.cos(ang) * CUB.SEAT, ang + Math.PI);
   return { g, chair: ch, partition };
 }
